@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page prescription-page">
+    <div class="section-title">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <form method="post" class="form-card prescription-form-card">
+        {% csrf_token %}
+        <div class="prescription-card-head">
+            <div class="prescription-card-title">
+                <h2>新增处方模板</h2>
+                <p>集中维护常用组方，录入时可直接套用后微调。</p>
+            </div>
+            <button class="button" type="submit">保存处方模板</button>
+        </div>
+        {% if form.non_field_errors %}
+            <div class="message">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-grid prescription-top-grid">
+            <div class="field-box prescription-field-compact">
+                <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+            <div class="field-box prescription-field-compact">
+                <label for="{{ form.usage_method.id_for_label }}">{{ form.usage_method.label }}</label>
+                {{ form.usage_method }}
+                {{ form.usage_method.errors }}
+            </div>
+            <div class="field-box prescription-field-compact">
+                <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                {{ form.notes }}
+                {{ form.notes.errors }}
+            </div>
+        </div>
+        <div class="field-box prescription-items-box">
+            <label for="{{ form.items_text.id_for_label }}">{{ form.items_text.label }}</label>
+            {{ form.items_text }}
+            {% if form.items_text.help_text %}
+                <small class="helptext prescription-items-help">{{ form.items_text.help_text }}</small>
+            {% endif %}
+            {{ form.items_text.errors }}
+        </div>
+    </form>
+
+    <section class="panel top-gap prescription-library-card">
+        <div class="list-head">
+            <div class="prescription-card-title">
+                <h2>已录入处方模板</h2>
+                <p class="prescription-library-tip">每行一个药味，格式：饮片名称|剂量|单位|脚注。例如：黄芪|15|g|先煎</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="table prescription-table">
+                <thead>
+                    <tr>
+                        <th>处方名称</th>
+                        <th>用药方式</th>
+                        <th>备注</th>
+                        <th>药味数</th>
+                        <th>具体处方</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in templates %}
+                        <tr>
+                            <td class="prescription-name-cell">{{ item.name }}</td>
+                            <td>{{ item.usage_method|default:"-" }}</td>
+                            <td>{{ item.notes|default:"-" }}</td>
+                            <td><span class="prescription-count-chip">{{ item.items.count }} 味</span></td>
+                            <td class="prescription-items-cell">
+                                <div class="prescription-items-list">
+                                    {% for row in item.items.all %}
+                                        <span class="prescription-item-pill">
+                                            {{ row.herb_name }} {{ row.dosage }}{{ row.unit }}{% if row.usage %}（{{ row.usage }}）{% endif %}
+                                        </span>
+                                    {% empty %}
+                                        <span class="term-alias">-</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="prescription-actions-cell">
+                                <div class="row-actions">
+                                    <a href="{% url 'prescription_template_update' item.pk %}">编辑</a>
+                                    <a href="{% url 'prescription_template_delete' item.pk %}">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">暂无处方模板。</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

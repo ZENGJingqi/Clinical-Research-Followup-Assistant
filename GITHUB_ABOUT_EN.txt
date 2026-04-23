@@ -1,0 +1,17 @@
+Repository name:
+Clinical-Research-Followup-Assistant
+
+Repository URL:
+https://github.com/ZENGJingqi/Clinical-Research-Followup-Assistant
+
+Short description:
+A simple Django web application for patient tracking, clinical follow-up management, project enrollment, data export, and AI-assisted summaries.
+
+Overview:
+Clinical Research Followup Assistant is a web-based system for clinical research teams. It helps manage patients, treatments, follow-up visits, research projects, scales, attachments, and exportable data in one place. Optional AI features can also support faster patient summary writing.
+
+Keywords:
+clinical research, followup, patient management, treatment tracking, research enrollment, longitudinal data, medical data export, AI summary, Django, SQLite
+
+Suggested topics:
+django, python, clinical-research, clinical-followup, patient-management, medical-informatics, research-data, sqlite, ai-assistant, web-application

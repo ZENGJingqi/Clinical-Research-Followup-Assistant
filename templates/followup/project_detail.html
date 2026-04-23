@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+
+{% block title %}项目详情{% endblock %}
+
+{% block content %}
+<section class="page-head project-page-head">
+    <div class="project-title-wrap">
+        <h1>{{ project.name }}</h1>
+        <p>
+            负责人：{{ project.principal_investigator|default:"-" }} ｜ 状态：
+            <span class="project-status-chip project-status-{{ project.status }}">{{ project.get_status_display }}</span>
+        </p>
+    </div>
+    <div class="project-header-actions">
+        {% if can_manage_project_definition %}
+            <a class="button button-secondary button-small" href="{% url 'project_update' project.pk %}">编辑项目</a>
+            <a class="button button-danger button-small" href="{% url 'project_delete' project.pk %}">删除项目</a>
+        {% endif %}
+        <a class="button button-secondary button-small" href="{% url 'project_list' %}">返回列表</a>
+    </div>
+</section>
+
+<section class="project-metric-inline">
+    <article class="project-metric-card">
+        <span>目标例数</span>
+        <strong>{{ project.target_enrollment }}</strong>
+    </article>
+    <article class="project-metric-card">
+        <span>已纳入</span>
+        <strong>{{ project_stats.patient_count }}</strong>
+    </article>
+    <article class="project-metric-card">
+        <span>入组差额</span>
+        <strong>{{ enrollment_gap }}</strong>
+    </article>
+    <article class="project-metric-card">
+        <span>在组</span>
+        <strong>{{ project_stats.marker_in_count }}</strong>
+    </article>
+    <article class="project-metric-card">
+        <span>完成</span>
+        <strong>{{ project_stats.marker_completed_count }}</strong>
+    </article>
+    <article class="project-metric-card">
+        <span>退出</span>
+        <strong>{{ project_stats.marker_withdrawn_count }}</strong>
+    </article>
+    <article class="project-metric-card">
+        <span>脱落</span>
+        <strong>{{ project_stats.marker_lost_count }}</strong>
+    </article>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card stat-card-wide">
+        <p class="stat-label">项目随访概况</p>
+        <div class="stat-inline">
+            <div><span>患者人数</span><strong>{{ project_stats.patient_count }}</strong></div>
+            <div><span>诊疗次数</span><strong>{{ project_stats.treatment_count }}</strong></div>
+            <div><span>随访次数</span><strong>{{ project_stats.followup_count }}</strong></div>
+        </div>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">今日需回访</p>
+        <div class="stat-value-line">
+            <strong class="stat-value">{{ project_stats.today_due }}</strong>
+            <span class="stat-suffix">人</span>
+        </div>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">近一周内需回访</p>
+        <div class="stat-value-line">
+            <strong class="stat-value">{{ project_stats.week_due }}</strong>
+            <span class="stat-suffix">人</span>
+        </div>
+    </article>
+</section>
+
+<section class="panel project-detail-panel">
+    <div class="table-actions">
+        <button type="button" class="button button-secondary" id="toggle-group-summary">分组概况</button>
+    </div>
+    <div class="table-wrap top-gap" id="group-summary-wrap" hidden>
+        <table class="table project-group-summary-table">
+            <thead>
+                <tr>
+                    <th>分组</th>
+                    <th>在组</th>
+                    <th>完成</th>
+                    <th>退出</th>
+                    <th>脱落</th>
+                    <th>合计</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in project_group_marker_stats %}
+                    <tr>
+                        <td>{{ row.group_name }}</td>
+                        <td>{{ row.in_count }}</td>
+                        <td>{{ row.completed_count }}</td>
+                        <td>{{ row.withdrawn_count }}</td>
+                        <td>{{ row.lost_count }}</td>
+                        <td>{{ row.total_count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="project-empty-cell">暂无分组统计。</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if can_export_project_data %}
+        <form method="post" action="{% url 'project_export' project.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="current_query" value="{{ current_query }}">
+            <div class="table-actions">
+                <button class="button" type="submit" name="scope" value="selected">导出勾选汇总</button>
+                <button class="button button-secondary" type="submit" name="scope" value="filtered">导出本项目全部</button>
+            </div>
+            <div class="table-wrap">
+                <table class="table project-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all"></th>
+                            <th><a href="?{{ project_sort_queries.name }}">姓名</a></th>
+                            <th><a href="?{{ project_sort_queries.age }}">年龄</a></th>
+                            <th><a href="?{{ project_sort_queries.ethnicity }}">民族</a></th>
+                            <th><a href="?{{ project_sort_queries.tcm_disease }}">中医疾病</a></th>
+                            <th><a href="?{{ project_sort_queries.western_disease }}">西医疾病</a></th>
+                            <th><a href="?{{ project_sort_queries.project }}">项目</a></th>
+                            <th><a href="?{{ project_sort_queries.group }}">分组</a></th>
+                            <th><a href="?{{ project_sort_queries.marker }}">标记</a></th>
+                            <th><a href="?{{ project_sort_queries.status }}">状态</a></th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in page_obj %}
+                            {% with patient=row.patient %}
+                                <tr>
+                                    <td><input type="checkbox" name="selected_ids" value="{{ patient.id }}"></td>
+                                    <td><a class="project-name-link" href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+                                    <td>{{ patient.current_age|default:"-" }}</td>
+                                    <td>{{ patient.ethnicity|default:"-" }}</td>
+                                    <td>{{ row.tcm_disease|default:"-" }}</td>
+                                    <td>{{ row.western_disease|default:"-" }}</td>
+                                    <td>
+                                        {% if row.project_tags_view %}
+                                            <div class="project-lines">
+                                                {% for tag in row.project_tags_view %}
+                                                    <div class="project-line-item">
+                                                        <span class="patient-project-tag patient-project-status-{{ tag.project_status }} {% if tag.is_current_project %}patient-project-tag-current{% endif %}">
+                                                            {{ tag.project_name }}
+                                                        </span>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if row.project_tags_view %}
+                                            <div class="project-lines">
+                                                {% for tag in row.project_tags_view %}
+                                                    <div class="project-line-item">{{ tag.group_name|default:"-" }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="enroll-marker-chip enroll-marker-{{ row.marker_status_value|default:'in' }}">
+                                            {{ row.marker_status_label|default:"在组" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="status {% if row.status == '已逾期' %}status-red{% elif row.status == '今日回访' %}status-today{% elif row.status == '已完成' %}status-green{% else %}status-amber{% endif %}">
+                                            {{ row.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if row.can_manage_enrollment %}
+                                            <button
+                                                type="button"
+                                                class="button button-secondary button-small js-open-marker-drawer"
+                                                data-action-url="{% url 'project_enrollment_marker_update' project.pk row.current_enrollment_id %}"
+                                                data-patient-name="{{ patient.name }}"
+                                                data-patient-id="{{ patient.outpatient_number|default:'-' }}"
+                                                data-marker-status="{{ row.marker_status_value|default:'in' }}"
+                                                data-marker-date="{% if row.marker_date %}{{ row.marker_date|date:'Y-m-d' }}{% endif %}"
+                                                data-marker-note="{{ row.marker_note|default:'' }}"
+                                            >
+                                                标记
+                                            </button>
+                                            <a class="button button-secondary button-small" href="{% url 'project_enrollment_delete' project.pk row.current_enrollment_id %}">移除</a>
+                                        {% else %}
+                                            <span class="inline-note">超出可操作期限</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="project-empty-cell">当前项目暂无患者。</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </form>
+        <form method="post" action="{% url 'project_export_detail' project.pk %}" class="export-detail-form">
+            {% csrf_token %}
+            <input type="hidden" name="current_query" value="{{ current_query }}">
+            <div class="table-actions">
+                <button class="button" type="submit" name="scope" value="selected" onclick="return syncSelectedIds(this.form);">导出勾选详情</button>
+                <button class="button button-secondary" type="submit" name="scope" value="filtered">导出本项目详情</button>
+            </div>
+        </form>
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination pagination-inline top-gap">
+                {% if page_obj.has_previous %}
+                    <a href="?{{ prev_page_query }}">上一页</a>
+                {% endif %}
+                <span>第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                {% if page_obj.has_next %}
+                    <a href="?{{ next_page_query }}">下一页</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="table-wrap">
+            <table class="table project-table">
+                <thead>
+                    <tr>
+                        <th><a href="?{{ project_sort_queries.name }}">姓名</a></th>
+                        <th><a href="?{{ project_sort_queries.age }}">年龄</a></th>
+                        <th><a href="?{{ project_sort_queries.ethnicity }}">民族</a></th>
+                        <th><a href="?{{ project_sort_queries.tcm_disease }}">中医疾病</a></th>
+                        <th><a href="?{{ project_sort_queries.western_disease }}">西医疾病</a></th>
+                        <th><a href="?{{ project_sort_queries.project }}">项目</a></th>
+                        <th><a href="?{{ project_sort_queries.group }}">分组</a></th>
+                        <th><a href="?{{ project_sort_queries.marker }}">标记</a></th>
+                        <th><a href="?{{ project_sort_queries.status }}">状态</a></th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in page_obj %}
+                        {% with patient=row.patient %}
+                            <tr>
+                                <td><a class="project-name-link" href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+                                <td>{{ patient.current_age|default:"-" }}</td>
+                                <td>{{ patient.ethnicity|default:"-" }}</td>
+                                <td>{{ row.tcm_disease|default:"-" }}</td>
+                                <td>{{ row.western_disease|default:"-" }}</td>
+                                <td>
+                                    {% if row.project_tags_view %}
+                                        <div class="project-lines">
+                                            {% for tag in row.project_tags_view %}
+                                                <div class="project-line-item">
+                                                    <span class="patient-project-tag patient-project-status-{{ tag.project_status }} {% if tag.is_current_project %}patient-project-tag-current{% endif %}">
+                                                        {{ tag.project_name }}
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.project_tags_view %}
+                                        <div class="project-lines">
+                                            {% for tag in row.project_tags_view %}
+                                                <div class="project-line-item">{{ tag.group_name|default:"-" }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="enroll-marker-chip enroll-marker-{{ row.marker_status_value|default:'in' }}">
+                                        {{ row.marker_status_label|default:"在组" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status {% if row.status == '已逾期' %}status-red{% elif row.status == '今日回访' %}status-today{% elif row.status == '已完成' %}status-green{% else %}status-amber{% endif %}">
+                                        {{ row.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if row.can_manage_enrollment %}
+                                        <button
+                                            type="button"
+                                            class="button button-secondary button-small js-open-marker-drawer"
+                                            data-action-url="{% url 'project_enrollment_marker_update' project.pk row.current_enrollment_id %}"
+                                            data-patient-name="{{ patient.name }}"
+                                            data-patient-id="{{ patient.outpatient_number|default:'-' }}"
+                                            data-marker-status="{{ row.marker_status_value|default:'in' }}"
+                                            data-marker-date="{% if row.marker_date %}{{ row.marker_date|date:'Y-m-d' }}{% endif %}"
+                                            data-marker-note="{{ row.marker_note|default:'' }}"
+                                        >
+                                            标记
+                                        </button>
+                                        <a class="button button-secondary button-small" href="{% url 'project_enrollment_delete' project.pk row.current_enrollment_id %}">移除</a>
+                                    {% else %}
+                                        <span class="inline-note">超出可操作期限</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="10" class="project-empty-cell">当前项目暂无患者。</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination pagination-inline top-gap">
+                {% if page_obj.has_previous %}
+                    <a href="?{{ prev_page_query }}">上一页</a>
+                {% endif %}
+                <span>第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                {% if page_obj.has_next %}
+                    <a href="?{{ next_page_query }}">下一页</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
+
+<div class="marker-drawer-overlay" id="marker-drawer-overlay" hidden></div>
+<aside class="marker-drawer" id="marker-drawer" aria-hidden="true">
+    <div class="marker-drawer-head">
+        <div class="marker-drawer-title">
+            <h2>患者标记</h2>
+            <p>请填写本次项目状态与说明</p>
+        </div>
+        <button type="button" class="button button-secondary button-small" id="marker-drawer-close">关闭</button>
+    </div>
+    <p class="marker-drawer-patient" id="marker-drawer-patient"></p>
+    <form method="post" id="marker-drawer-form" class="marker-drawer-form">
+        {% csrf_token %}
+        <div class="marker-drawer-error" id="marker-drawer-error" hidden></div>
+        <div class="field-box">
+            <label for="marker-status-input">标记</label>
+            <select id="marker-status-input" name="marker_status" required>
+                {% for value, label in marker_status_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field-box">
+            <label for="marker-date-input">标记日期</label>
+            <input id="marker-date-input" type="text" class="js-date-input" data-date-input="true" data-flatpickr="date" name="marker_date" placeholder="YYYY-MM-DD" autocomplete="off">
+        </div>
+        <div class="field-box">
+            <label for="marker-note-input">标记说明</label>
+            <textarea id="marker-note-input" name="marker_note" placeholder="请填写标记说明" maxlength="200" rows="4"></textarea>
+        </div>
+        <div class="toolbar-actions top-gap">
+            <button class="button" type="submit">保存标记</button>
+        </div>
+    </form>
+</aside>
+
+<script>
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            document.querySelectorAll('input[name="selected_ids"]').forEach((item) => {
+                item.checked = selectAll.checked;
+            });
+        });
+    }
+
+    function syncSelectedIds(form) {
+        form.querySelectorAll('input[name="selected_ids"]').forEach((item) => item.remove());
+        document.querySelectorAll('input[name="selected_ids"]:checked').forEach((item) => {
+            const cloned = document.createElement('input');
+            cloned.type = 'hidden';
+            cloned.name = 'selected_ids';
+            cloned.value = item.value;
+            form.appendChild(cloned);
+        });
+        return true;
+    }
+
+    const toggleGroupSummary = document.getElementById('toggle-group-summary');
+    const groupSummaryWrap = document.getElementById('group-summary-wrap');
+    if (toggleGroupSummary && groupSummaryWrap) {
+        toggleGroupSummary.addEventListener('click', function () {
+            const willShow = groupSummaryWrap.hidden;
+            groupSummaryWrap.hidden = !willShow;
+            toggleGroupSummary.textContent = willShow ? '收起分组概况' : '分组概况';
+        });
+    }
+
+    (function () {
+        const drawer = document.getElementById('marker-drawer');
+        const overlay = document.getElementById('marker-drawer-overlay');
+        const closeButton = document.getElementById('marker-drawer-close');
+        const form = document.getElementById('marker-drawer-form');
+        const patientLine = document.getElementById('marker-drawer-patient');
+        const statusInput = document.getElementById('marker-status-input');
+        const dateInput = document.getElementById('marker-date-input');
+        const noteInput = document.getElementById('marker-note-input');
+        const errorBox = document.getElementById('marker-drawer-error');
+        const openButtons = document.querySelectorAll('.js-open-marker-drawer');
+
+        function ensureMarkerDatePicker() {
+            if (!dateInput || dateInput._flatpickr || !window.flatpickr) {
+                return;
+            }
+            window.flatpickr(dateInput, {
+                dateFormat: 'Y-m-d',
+                locale: window.flatpickr.l10ns.zh || 'zh',
+                allowInput: true,
+                disableMobile: true,
+                monthSelectorType: 'dropdown',
+                nextArrow: '›',
+                prevArrow: '‹',
+            });
+        }
+
+        function closeDrawer() {
+            if (!drawer || !overlay) {
+                return;
+            }
+            drawer.classList.remove('is-open');
+            drawer.setAttribute('aria-hidden', 'true');
+            overlay.hidden = true;
+        }
+
+        function showError(message) {
+            if (!errorBox) {
+                window.alert(message);
+                return;
+            }
+            errorBox.textContent = message;
+            errorBox.hidden = false;
+        }
+
+        function clearError() {
+            if (!errorBox) {
+                return;
+            }
+            errorBox.hidden = true;
+            errorBox.textContent = '';
+        }
+
+        function openDrawer(button) {
+            if (!drawer || !overlay || !form) {
+                return;
+            }
+            form.action = button.dataset.actionUrl || '';
+            const patientName = button.dataset.patientName || '';
+            const patientId = button.dataset.patientId || '';
+            patientLine.textContent = `患者：${patientName}（${patientId}）`;
+            statusInput.value = button.dataset.markerStatus || 'in';
+            noteInput.value = button.dataset.markerNote || '';
+            clearError();
+            ensureMarkerDatePicker();
+            const markerDate = button.dataset.markerDate || '';
+            const defaultToday = window.followupDateUtils
+                ? window.followupDateUtils.formatDateObject(new Date())
+                : '';
+            const resolvedDate = markerDate || defaultToday;
+            if (dateInput._flatpickr) {
+                dateInput._flatpickr.setDate(resolvedDate || null, true);
+            } else {
+                dateInput.value = resolvedDate;
+            }
+
+            overlay.hidden = false;
+            drawer.classList.add('is-open');
+            drawer.setAttribute('aria-hidden', 'false');
+        }
+
+        openButtons.forEach((button) => {
+            button.addEventListener('click', function () {
+                openDrawer(button);
+            });
+        });
+        if (closeButton) {
+            closeButton.addEventListener('click', closeDrawer);
+        }
+        if (overlay) {
+            overlay.addEventListener('click', closeDrawer);
+        }
+        if (statusInput) {
+            statusInput.addEventListener('change', clearError);
+        }
+        if (noteInput) {
+            noteInput.addEventListener('input', clearError);
+        }
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                const status = (statusInput?.value || '').trim();
+                const note = (noteInput?.value || '').trim();
+                if (status && status !== 'in' && !note) {
+                    event.preventDefault();
+                    showError('非“在组”时，标记说明不能为空。');
+                    if (noteInput) {
+                        noteInput.focus();
+                    }
+                }
+            });
+        }
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeDrawer();
+            }
+        });
+        document.addEventListener('DOMContentLoaded', ensureMarkerDatePicker);
+    }());
+</script>
+{% endblock %}

@@ -1,0 +1,877 @@
+﻿{% extends "base.html" %}
+
+{% block title %}患者详情{% endblock %}
+
+{% block content %}
+<section class="detail-head">
+    <div>
+        <h1>{{ patient.name }}</h1>
+        <p>门诊号：{{ patient.outpatient_number|default:"-" }}</p>
+    </div>
+    <div class="toolbar-actions">
+        {% if can_modify_patient %}
+            <a class="button button-secondary" href="{% url 'patient_update' patient.pk %}">编辑患者</a>
+            <a class="button button-danger" href="{% url 'patient_delete' patient.pk %}">删除患者</a>
+        {% endif %}
+        <a class="button" href="{% url 'treatment_create' patient.pk %}">新增诊疗</a>
+    </div>
+</section>
+
+<div class="detail-layout">
+    <article class="panel">
+        <div class="section-head-inline">
+            <h2>基本信息</h2>
+            <span class="audit-inline">
+                录入人：{% if patient.created_by %}{{ patient.created_by.first_name|default:patient.created_by.username }}{% else %}-{% endif %}
+                ｜ 录入时间：{{ patient.created_at|date:"Y-m-d H:i"|default:"-" }}
+                ｜ 最近修改人：{% if patient.updated_by %}{{ patient.updated_by.first_name|default:patient.updated_by.username }}{% else %}-{% endif %}
+                ｜ 最近修改时间：{{ patient.updated_at|date:"Y-m-d H:i"|default:"-" }}
+            </span>
+        </div>
+        <dl class="meta">
+            <div><dt>性别</dt><dd>{{ patient.get_gender_display }}</dd></div>
+            <div><dt>出生日期</dt><dd>{{ patient.birth_date|default:"-" }}</dd></div>
+            <div><dt>当前年龄</dt><dd>{{ patient.current_age|default:"-" }}</dd></div>
+            <div><dt>民族</dt><dd>{{ patient.ethnicity|default:"-" }}</dd></div>
+            <div><dt>电话</dt><dd>{{ patient.phone|default:"-" }}</dd></div>
+            <div><dt>住址</dt><dd>{{ patient.address|default:"-" }}</dd></div>
+        </dl>
+    </article>
+
+    <article class="panel timeline-panel">
+        <div class="list-head">
+            <div>
+                <h2>诊疗时间轴</h2>
+                <p>共 {{ treatment_rows|length }} 次诊疗，点击展开查看每次诊疗和对应随访。</p>
+            </div>
+        </div>
+
+        {% for row in treatment_rows %}
+            {% with treatment=row.treatment %}
+            <details class="timeline-item" {% if row.is_latest %}open{% endif %}>
+                <summary class="timeline-summary">
+                    <span class="timeline-dot"></span>
+                    <div class="timeline-main">
+                        <strong>第 {{ row.sequence }} 次诊疗</strong>
+                        <span>{{ treatment.start_date }} · {{ treatment.treatment_name }}</span>
+                    </div>
+                    <div class="timeline-side">
+                        <span class="status {% if treatment.status_label == '已逾期' %}status-red{% elif treatment.status_label == '今日回访' %}status-today{% elif treatment.status_label == '已完成' %}status-green{% else %}status-amber{% endif %}">
+                            {{ treatment.status_label }}
+                        </span>
+                        <span class="timeline-progress">{{ treatment.completed_followup_count }}/{{ treatment.planned_followup_count }}</span>
+                    </div>
+                </summary>
+
+                <div class="timeline-content">
+                    <div class="toolbar-actions">
+                        <a class="button" href="{% url 'followup_create' treatment.id %}">新增随访</a>
+                        {% if row.can_modify %}
+                            <form method="post" action="{% url 'treatment_toggle_followup' treatment.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <button class="button button-secondary" type="submit">
+                                    {% if treatment.followup_closed %}重新启动回访{% else %}结束回访{% endif %}
+                                </button>
+                            </form>
+                            <a class="button button-secondary" href="{% url 'treatment_update' treatment.id %}">编辑诊疗</a>
+                            <a class="button button-danger" href="{% url 'treatment_delete' treatment.id %}">删除诊疗</a>
+                        {% endif %}
+                    </div>
+
+                    <div class="section-head-inline">
+                        <h3>诊疗信息</h3>
+                        <span class="audit-inline">
+                            录入人：{% if treatment.created_by %}{{ treatment.created_by.first_name|default:treatment.created_by.username }}{% else %}-{% endif %}
+                            ｜ 录入时间：{{ treatment.created_at|date:"Y-m-d H:i"|default:"-" }}
+                            ｜ 最近修改人：{% if treatment.updated_by %}{{ treatment.updated_by.first_name|default:treatment.updated_by.username }}{% else %}-{% endif %}
+                            ｜ 最近修改时间：{{ treatment.updated_at|date:"Y-m-d H:i"|default:"-" }}
+                        </span>
+                    </div>
+                    <dl class="meta meta-quad">
+                        <div><dt>就诊单位</dt><dd>{{ treatment.display_visit_unit|default:"-" }}</dd></div>
+                        <div>
+                            <dt>西医疾病</dt>
+                            <dd>
+                                {% if row.western_disease_tags %}
+                                    <div class="term-tag-display-list">
+                                        {% for tag in row.western_disease_tags %}
+                                            <span class="term-tag-display-chip {% if tag.known %}is-known{% else %}is-unknown{% endif %}">{{ tag.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>中医疾病</dt>
+                            <dd>
+                                {% if row.tcm_disease_tags %}
+                                    <div class="term-tag-display-list">
+                                        {% for tag in row.tcm_disease_tags %}
+                                            <span class="term-tag-display-chip {% if tag.known %}is-known{% else %}is-unknown{% endif %}">{{ tag.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div><dt>总随访周数</dt><dd>{{ treatment.total_weeks }} 周</dd></div>
+                        <div><dt>入院日期</dt><dd>{{ treatment.admission_date|default:"-" }}</dd></div>
+                        <div><dt>出院日期</dt><dd>{{ treatment.discharge_date|default:"-" }}</dd></div>
+                        <div><dt>当前状态</dt><dd>{{ treatment.status_label }}</dd></div>
+                        <div><dt>随访频率</dt><dd>每 {{ treatment.followup_interval_days }} 天</dd></div>
+                        <div><dt>下次随访</dt><dd>{{ treatment.next_followup_date|default:"-" }}</dd></div>
+                        <div><dt>结束回访日期</dt><dd>{{ treatment.followup_closed_at|default:"-" }}</dd></div>
+                    </dl>
+
+                    <div class="progress-block">
+                        <div class="progress-label">
+                            <span>已完成 {{ treatment.completed_followup_count }}/{{ treatment.planned_followup_count }}</span>
+                            <span>{{ treatment.progress_percent }}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ treatment.progress_percent }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="text-grid">
+                        <div class="text-panel"><h3>主诉</h3><p>{{ treatment.chief_complaint|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>现病史</h3><p>{{ treatment.present_illness|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>既往史</h3><p>{{ treatment.past_history|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>个人史</h3><p>{{ treatment.personal_history|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>婚育史</h3><p>{{ treatment.marital_history|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>过敏史</h3><p>{{ treatment.allergy_history|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>家族史</h3><p>{{ treatment.family_history|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel">
+                            <h3>治则治法</h3>
+                            {% if row.treatment_principle_tags %}
+                                <div class="term-tag-display-list">
+                                    {% for tag in row.treatment_principle_tags %}
+                                        <span class="term-tag-display-chip {% if tag.known %}is-known{% else %}is-unknown{% endif %}">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p>-</p>
+                            {% endif %}
+                        </div>
+                        <div class="text-panel"><h3>舌诊</h3><p>{{ treatment.tongue_diagnosis|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>脉诊</h3><p>{{ treatment.pulse_diagnosis|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel">
+                            <h3>病因病机</h3>
+                            {% if row.pathogenesis_tags %}
+                                <div class="term-tag-display-list">
+                                    {% for tag in row.pathogenesis_tags %}
+                                        <span class="term-tag-display-chip {% if tag.known %}is-known{% else %}is-unknown{% endif %}">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p>-</p>
+                            {% endif %}
+                        </div>
+                        <div class="text-panel">
+                            <h3>症状/证候</h3>
+                            {% if row.symptom_syndrome_tags %}
+                                <div class="term-tag-display-list">
+                                    {% for tag in row.symptom_syndrome_tags %}
+                                        <span class="term-tag-display-chip {% if tag.known %}is-known{% else %}is-unknown{% endif %}">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p>-</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="section-head-inline top-gap">
+                        <h3>处方明细</h3>
+                        <span class="use-method-highlight">用药方式：{{ treatment.prescription_usage_method|default:"-" }}</span>
+                    </div>
+                    <div class="prescription-display-grid">
+                        {% for item in row.prescription_view_items %}
+                            <div class="prescription-display-cell">
+                                <div class="prescription-display-line">
+                                    <span class="prescription-display-index">{{ item.index }}</span>
+                                    <span class="term-tag-display-chip {% if item.known_herb %}is-known{% else %}is-unknown{% endif %}">{{ item.herb_name|default:"-" }}</span>
+                                    <span class="prescription-display-dose {% if item.dosage_missing %}is-missing{% endif %}">{{ item.dosage|default:"-" }}</span>
+                                    <span class="prescription-display-unit {% if item.unit_missing %}is-missing{% endif %}">{{ item.unit|default:"-" }}</span>
+                                    <span class="prescription-display-usage">{{ item.usage|default:"-" }}</span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p>暂无处方明细。</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="text-grid">
+                        <div class="text-panel"><h3>辅助检查</h3><p>{{ treatment.auxiliary_exam_results|default:"-"|linebreaksbr }}</p></div>
+                        <div class="text-panel"><h3>备注</h3><p>{{ treatment.notes|default:"-"|linebreaksbr }}</p></div>
+                    </div>
+                    <div class="text-panel top-gap">
+                        <h3>辅助检查附件</h3>
+                        {% if row.auxiliary_attachments %}
+                            <ul class="inline-list">
+                                {% for attachment in row.auxiliary_attachments %}
+                                    <li>
+                                        <a href="{% url 'auxiliary_attachment_download' attachment.pk %}">{{ attachment.original_name|default:attachment.file.name }}</a>
+                                        <a class="button button-secondary attachment-preview-btn" href="{% url 'auxiliary_attachment_preview' attachment.pk %}" target="_blank" rel="noopener">预览</a>
+                                        <span>（{{ attachment.created_at|date:"Y-m-d H:i" }} · {{ attachment.uploaded_by.first_name|default:attachment.uploaded_by.username|default:"-" }}{% if attachment.note %} · 备注：{{ attachment.note }}{% endif %}）</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>-</p>
+                        {% endif %}
+                    </div>
+
+                    {% if row.scale_records %}
+                        <div class="list-head top-gap">
+                            <h3>量表记录</h3>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="table scale-record-table">
+                                <thead>
+                                    <tr>
+                                        <th>量表名称</th>
+                                        <th>量表说明</th>
+                                        <th>填写进度</th>
+                                        <th>录入人</th>
+                                        <th>录入时间</th>
+                                        <th>详情</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for scale_row in row.scale_records %}
+                                        {% with record=scale_row.record %}
+                                        <tr>
+                                            <td class="scale-record-name">{{ record.template.name }}</td>
+                                            <td class="scale-record-desc">{{ record.template.description|default:"-" }}</td>
+                                            <td><span class="scale-record-progress">{{ scale_row.filled_count }}/{{ scale_row.total_count }} 项</span></td>
+                                            <td>
+                                                {% if record.created_by %}
+                                                    {{ record.created_by.first_name|default:record.created_by.username }}
+                                                {% elif record.updated_by %}
+                                                    {{ record.updated_by.first_name|default:record.updated_by.username }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ record.created_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                                            <td>
+                                                <button
+                                                    type="button"
+                                                    class="button button-secondary button-small scale-record-open"
+                                                    data-scale-record-id="{{ record.pk }}"
+                                                >
+                                                    查看
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+
+                    <div class="list-head top-gap">
+                        <h3>随访记录</h3>
+                        {% if treatment.followup_closed and treatment.followup_closed_at %}
+                            <span>该诊疗已于 {{ treatment.followup_closed_at }} 结束回访</span>
+                        {% elif treatment.next_followup_date %}
+                            <span>建议录入第 {{ row.next_visit_number }} 次随访</span>
+                        {% endif %}
+                    </div>
+                    {% if row.followups %}
+                        <div class="followup-list">
+                            {% for followup_row in row.followups %}
+                                {% with followup=followup_row.object %}
+                                <details class="followup-item">
+                                    <summary class="followup-summary">
+                                        <div class="followup-main">
+                                            <strong>第 {{ followup.visit_number }} 次随访</strong>
+                                            <span>{{ followup.followup_date }} · 下次建议 {{ followup.planned_next_followup_date|default:"-" }}</span>
+                                        </div>
+                                        <span class="followup-side">{{ followup.medication_adherence|default:"依从性未填" }}</span>
+                                    </summary>
+                                    <div class="followup-content">
+                                        <div class="section-head-inline">
+                                            <h4>随访信息</h4>
+                                            <span class="audit-inline">
+                                                录入人：{% if followup.created_by %}{{ followup.created_by.first_name|default:followup.created_by.username }}{% else %}-{% endif %}
+                                                ｜ 录入时间：{{ followup.created_at|date:"Y-m-d H:i"|default:"-" }}
+                                                ｜ 最近修改人：{% if followup.updated_by %}{{ followup.updated_by.first_name|default:followup.updated_by.username }}{% else %}-{% endif %}
+                                                ｜ 最近修改时间：{{ followup.updated_at|date:"Y-m-d H:i"|default:"-" }}
+                                            </span>
+                                        </div>
+                                        <dl class="meta">
+                                            <div><dt>症状变化</dt><dd>{{ followup.symptoms|default:"-" }}</dd></div>
+                                            <div><dt>用药依从性</dt><dd>{{ followup.medication_adherence|default:"-" }}</dd></div>
+                                            <div><dt>不良反应</dt><dd>{{ followup.adverse_events|default:"-" }}</dd></div>
+                                            <div><dt>辅助检查</dt><dd>{{ followup.auxiliary_exam_results|default:"-" }}</dd></div>
+                                        </dl>
+                                        <div class="text-panel top-gap">
+                                            <h4>辅助检查附件</h4>
+                                            {% if followup_row.auxiliary_attachments %}
+                                                <ul class="inline-list">
+                                                    {% for attachment in followup_row.auxiliary_attachments %}
+                                                        <li>
+                                                            <a href="{% url 'auxiliary_attachment_download' attachment.pk %}">{{ attachment.original_name|default:attachment.file.name }}</a>
+                                                            <a class="button button-secondary attachment-preview-btn" href="{% url 'auxiliary_attachment_preview' attachment.pk %}" target="_blank" rel="noopener">预览</a>
+                                                            <span>（{{ attachment.created_at|date:"Y-m-d H:i" }} · {{ attachment.uploaded_by.first_name|default:attachment.uploaded_by.username|default:"-" }}{% if attachment.note %} · 备注：{{ attachment.note }}{% endif %}）</span>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p>-</p>
+                                            {% endif %}
+                                        </div>
+                                        {% if followup_row.scale_records %}
+                                            <div class="table-wrap">
+                                                <table class="table scale-record-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>量表名称</th>
+                                                            <th>量表说明</th>
+                                                            <th>填写进度</th>
+                                                            <th>录入人</th>
+                                                            <th>录入时间</th>
+                                                            <th>详情</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for scale_row in followup_row.scale_records %}
+                                                            {% with record=scale_row.record %}
+                                                            <tr>
+                                                                <td class="scale-record-name">{{ record.template.name }}</td>
+                                                                <td class="scale-record-desc">{{ record.template.description|default:"-" }}</td>
+                                                                <td><span class="scale-record-progress">{{ scale_row.filled_count }}/{{ scale_row.total_count }} 项</span></td>
+                                                                <td>
+                                                                    {% if record.created_by %}
+                                                                        {{ record.created_by.first_name|default:record.created_by.username }}
+                                                                    {% elif record.updated_by %}
+                                                                        {{ record.updated_by.first_name|default:record.updated_by.username }}
+                                                                    {% else %}
+                                                                        -
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>{{ record.created_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                                                                <td>
+                                                                    <button
+                                                                        type="button"
+                                                                        class="button button-secondary button-small scale-record-open"
+                                                                        data-scale-record-id="{{ record.pk }}"
+                                                                    >
+                                                                        查看
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            {% endwith %}
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {% endif %}
+                                        <div class="row-actions">
+                                            {% if followup_row.can_modify %}
+                                                <a href="{% url 'followup_update' followup.pk %}">编辑</a>
+                                                <a href="{% url 'followup_delete' followup.pk %}">删除</a>
+                                            {% else %}
+                                                <span>仅可查看</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </details>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>当前诊疗还没有随访记录。</p>
+                    {% endif %}
+                </div>
+            </details>
+            {% endwith %}
+        {% empty %}
+            <div>
+                <h2>还没有诊疗记录</h2>
+                <p>先为这个患者新增第一次诊疗，再基于这次诊疗设计随访计划。</p>
+                <a class="button" href="{% url 'treatment_create' patient.pk %}">新增诊疗</a>
+            </div>
+        {% endfor %}
+    </article>
+</div>
+
+{{ scale_record_detail_map|json_script:"scale-record-detail-map" }}
+
+<div class="scale-viewer" id="scale-viewer">
+    <div class="scale-viewer-overlay" id="scale-viewer-overlay" hidden></div>
+    <aside class="scale-viewer-drawer" id="scale-viewer-drawer" aria-hidden="true">
+        <div class="scale-viewer-head">
+            <div>
+                <h2 id="scale-viewer-title">量表详情</h2>
+                <p id="scale-viewer-meta">记录人：- ｜ 记录时间：-</p>
+            </div>
+            <button type="button" class="button button-secondary button-small" id="scale-viewer-close">关闭</button>
+        </div>
+        <div class="scale-viewer-body" id="scale-viewer-body"></div>
+    </aside>
+</div>
+
+<div class="ai-assistant" id="ai-assistant" data-chat-url="{% url 'patient_ai_chat' patient.pk %}">
+    <button type="button" class="ai-launcher" id="ai-launcher">智随</button>
+    <div class="ai-overlay" id="ai-overlay" hidden></div>
+    <aside class="ai-drawer" id="ai-drawer" aria-hidden="true">
+        <div class="ai-drawer-head">
+            <div>
+                <h2>智随</h2>
+                <p>当前对话仅在本页临时保留，离开患者详情页后自动清空。</p>
+            </div>
+            <button type="button" class="button button-secondary button-small" id="ai-close">关闭</button>
+        </div>
+
+        <div class="ai-context-panel">
+            <div class="ai-context-head">
+                <strong>带入资料范围</strong>
+                <span class="ai-context-note">默认不发送姓名、电话、住址等直接身份识别信息。</span>
+            </div>
+            <div class="ai-option-grid">
+                <label><input type="checkbox" id="ai-include-basic" {% if ai_options.include_basic %}checked{% endif %}> 基本信息</label>
+                <label><input type="checkbox" id="ai-include-latest-treatment" {% if ai_options.include_latest_treatment %}checked{% endif %}> 最新诊疗</label>
+                <label><input type="checkbox" id="ai-include-recent-followups" {% if ai_options.include_recent_followups %}checked{% endif %}> 最近 3 次随访</label>
+                <label><input type="checkbox" id="ai-include-full-history" {% if ai_options.include_full_history %}checked{% endif %}> 全部诊疗与随访历史</label>
+            </div>
+        </div>
+
+        <div class="ai-thread" id="ai-thread"></div>
+
+        <form class="ai-composer" id="ai-composer">
+            <textarea id="ai-input" rows="4" placeholder="例如：请总结该患者目前随访进展，并提示下一次随访需要重点关注什么。"></textarea>
+            <div class="ai-composer-toolbar">
+                <label class="ai-model-inline" for="ai-model-select">
+                    <span>模型</span>
+                    <select id="ai-model-select" class="ai-model-select">
+                        {% for model in ai_model_choices %}
+                            <option value="{{ model }}" {% if model == ai_default_model %}selected{% endif %}>{{ model }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button class="button ai-submit-button" type="submit" id="ai-submit">发送</button>
+            </div>
+            <div class="ai-composer-actions">
+                <span class="ai-note-inline">回答仅作科研随访辅助，不替代临床决策。</span>
+            </div>
+        </form>
+    </aside>
+</div>
+
+<script>
+    (function () {
+        const dataNode = document.getElementById('scale-record-detail-map');
+        const viewer = document.getElementById('scale-viewer');
+        if (!dataNode || !viewer) {
+            return;
+        }
+        const detailsMap = JSON.parse(dataNode.textContent || '{}');
+        const overlay = document.getElementById('scale-viewer-overlay');
+        const drawer = document.getElementById('scale-viewer-drawer');
+        const title = document.getElementById('scale-viewer-title');
+        const meta = document.getElementById('scale-viewer-meta');
+        const body = document.getElementById('scale-viewer-body');
+        const closeButton = document.getElementById('scale-viewer-close');
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function buildSectionRows(section) {
+            const items = section?.items || [];
+            const childrenMap = new Map();
+            items.forEach((item) => {
+                if (item.parent_key) {
+                    if (!childrenMap.has(item.parent_key)) {
+                        childrenMap.set(item.parent_key, []);
+                    }
+                    childrenMap.get(item.parent_key).push(item);
+                }
+            });
+            return items
+                .filter((item) => !item.parent_key || !items.some((candidate) => candidate.key === item.parent_key))
+                .map((item) => ({ item, children: childrenMap.get(item.key) || [] }));
+        }
+
+        function fieldTypeLabel(item) {
+            if (!item) {
+                return '';
+            }
+            if (item.field_type === 'score') {
+                return `${item.score_min} - ${item.score_max} 分`;
+            }
+            if (item.field_type === 'number') {
+                return `${item.score_min} - ${item.score_max}`;
+            }
+            const labels = {
+                text: '单行文本',
+                textarea: '多行文本',
+                select: '单选',
+            };
+            return labels[item.field_type] || item.field_type || '';
+        }
+
+        function renderReadonlyAnswer(item) {
+            const value = String(item?.value ?? '').trim();
+            const valueHtml = value
+                ? escapeHtml(value).replace(/\n/g, '<br>')
+                : '<span class="scale-viewer-answer-empty">未填写</span>';
+            const note = String(item?.note ?? '').trim();
+            return `
+                <div class="scale-viewer-answer">
+                    <div class="scale-viewer-answer-value">${valueHtml}</div>
+                    ${note ? `<div class="scale-viewer-answer-note">备注：${escapeHtml(note)}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function openViewer(recordId) {
+            const record = detailsMap[String(recordId)];
+            if (!record) {
+                return;
+            }
+            title.textContent = record.template_name || '量表详情';
+            meta.textContent = `记录人：${record.recorder_name || '-'} ｜ 记录时间：${record.record_time || '-'}`;
+            const sectionsHtml = (record.sections || []).map((section) => {
+                const rows = buildSectionRows(section).map(({ item, children }) => {
+                    const childHtml = children.map((child) => `
+                        <div class="scale-drawer-child">
+                            <div class="scale-drawer-question-head">
+                                <strong>${escapeHtml(child.label || '-')}</strong>
+                                <span>${escapeHtml(fieldTypeLabel(child))}</span>
+                            </div>
+                            ${renderReadonlyAnswer(child)}
+                        </div>
+                    `).join('');
+                    return `
+                        <section class="scale-drawer-question">
+                            <div class="scale-drawer-question-head">
+                                <strong>${escapeHtml(item.label || '-')}</strong>
+                                <span>${escapeHtml(fieldTypeLabel(item))}</span>
+                            </div>
+                            ${renderReadonlyAnswer(item)}
+                            ${childHtml ? `<div class="scale-drawer-children">${childHtml}</div>` : ''}
+                        </section>
+                    `;
+                }).join('');
+                return `
+                    <section class="scale-drawer-section">
+                        <div class="scale-drawer-section-head">
+                            <strong>${escapeHtml(section.title || '量表条目')}</strong>
+                            <span>${escapeHtml(section.description || '按题目层级展示，仅可查看')}</span>
+                        </div>
+                        <div class="scale-drawer-section-body">
+                            ${rows}
+                        </div>
+                    </section>
+                `;
+            }).join('');
+            body.innerHTML = `
+                <div class="scale-drawer-summary">
+                    <strong>${escapeHtml(record.template_name || '量表详情')}</strong>
+                    <span>${escapeHtml(record.template_description || '无说明')}</span>
+                    <span>填写进度：${escapeHtml(`${record.filled_count || 0}/${record.total_count || 0} 项`)}</span>
+                </div>
+                ${sectionsHtml || '<p class="scale-viewer-empty">该量表暂无可展示条目。</p>'}
+                ${record.notes ? `<section class="scale-viewer-notes"><h3>备注</h3><p>${escapeHtml(record.notes)}</p></section>` : ''}
+            `;
+            viewer.classList.add('is-open');
+            drawer.setAttribute('aria-hidden', 'false');
+            overlay.hidden = false;
+        }
+
+        function closeViewer() {
+            viewer.classList.remove('is-open');
+            drawer.setAttribute('aria-hidden', 'true');
+            overlay.hidden = true;
+        }
+
+        document.addEventListener('click', function (event) {
+            const trigger = event.target.closest('.scale-record-open');
+            if (trigger) {
+                openViewer(trigger.dataset.scaleRecordId);
+                return;
+            }
+        });
+        closeButton?.addEventListener('click', closeViewer);
+        overlay?.addEventListener('click', closeViewer);
+    }());
+</script>
+
+<script>
+    (function () {
+        const root = document.getElementById('ai-assistant');
+        if (!root) {
+            return;
+        }
+
+        const launcher = document.getElementById('ai-launcher');
+        const drawer = document.getElementById('ai-drawer');
+        const overlay = document.getElementById('ai-overlay');
+        const closeButton = document.getElementById('ai-close');
+        const thread = document.getElementById('ai-thread');
+        const form = document.getElementById('ai-composer');
+        const input = document.getElementById('ai-input');
+        const submitButton = document.getElementById('ai-submit');
+        const modelSelect = document.getElementById('ai-model-select');
+
+        const checkboxes = {
+            include_basic: document.getElementById('ai-include-basic'),
+            include_latest_treatment: document.getElementById('ai-include-latest-treatment'),
+            include_recent_followups: document.getElementById('ai-include-recent-followups'),
+            include_full_history: document.getElementById('ai-include-full-history'),
+        };
+
+        let history = [];
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+            return '';
+        }
+
+        function openDrawer() {
+            root.classList.add('is-open');
+            drawer.setAttribute('aria-hidden', 'false');
+            overlay.hidden = false;
+        }
+
+        function closeDrawer() {
+            root.classList.remove('is-open');
+            drawer.setAttribute('aria-hidden', 'true');
+            overlay.hidden = true;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatInline(text) {
+            return escapeHtml(String(text ?? '')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        function sectionClass(title) {
+            if (/状态|进展|概况/.test(title)) {
+                return 'ai-block-status';
+            }
+            if (/风险|提醒|预警/.test(title)) {
+                return 'ai-block-risk';
+            }
+            if (/建议|计划|随访/.test(title)) {
+                return 'ai-block-plan';
+            }
+            if (/补充|缺口|待完善|记录/.test(title)) {
+                return 'ai-block-note';
+            }
+            return 'ai-block-generic';
+        }
+
+        function normalizeHeading(line) {
+            return line
+                .replace(/^#{1,6}\s*/, '')
+                .replace(/^\d+[\.、]\s*/, '')
+                .replace(/[：:]\s*$/, '')
+                .trim();
+        }
+
+        function isSectionHeading(line) {
+            const title = normalizeHeading(line);
+            if (!title) {
+                return false;
+            }
+            if (/^#{1,6}\s*/.test(line)) {
+                return true;
+            }
+            if (/^\d+[\.、]\s*/.test(line) && title.length <= 18) {
+                return true;
+            }
+            if (/[：:]$/.test(line) && title.length <= 18) {
+                return true;
+            }
+            return /^(当前状态|风险与提醒|下次随访建议|记录补充点|资料缺口|随访重点)/.test(title);
+        }
+
+        function renderAssistantContent(content) {
+            const normalizedContent = String(content ?? '');
+            const lines = normalizedContent.replace(/\r\n/g, '\n').split('\n');
+            let html = '';
+            let sectionOpen = false;
+            let listOpen = false;
+            let hasHeading = false;
+
+            function openSection(title) {
+                html += `<section class="ai-block ${sectionClass(title)}"><h4>${formatInline(title)}</h4>`;
+                sectionOpen = true;
+            }
+
+            function closeList() {
+                if (listOpen) {
+                    html += '</ul>';
+                    listOpen = false;
+                }
+            }
+
+            function closeSection() {
+                closeList();
+                if (sectionOpen) {
+                    html += '</section>';
+                    sectionOpen = false;
+                }
+            }
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+                if (!line) {
+                    closeList();
+                    continue;
+                }
+
+                if (isSectionHeading(line)) {
+                    closeSection();
+                    hasHeading = true;
+                    openSection(normalizeHeading(line));
+                    continue;
+                }
+
+                const bulletMatch = line.match(/^[-•*]\s+(.*)$/);
+                if (bulletMatch) {
+                    if (!listOpen) {
+                        html += hasHeading && sectionOpen ? '<ul>' : '<ul class="ai-flow-list">';
+                        listOpen = true;
+                    }
+                    html += `<li>${formatInline(bulletMatch[1])}</li>`;
+                    continue;
+                }
+
+                closeList();
+                if (hasHeading && sectionOpen) {
+                    html += `<p>${formatInline(line)}</p>`;
+                } else {
+                    html += `<p class="ai-flow-paragraph">${formatInline(line)}</p>`;
+                }
+            }
+
+            closeSection();
+            return html || `<p class="ai-flow-paragraph">${formatInline(normalizedContent)}</p>`;
+        }
+
+        function appendMessage(role, content, pending) {
+            const item = document.createElement('article');
+            item.className = `ai-message ai-message-${role}`;
+            if (pending) {
+                item.classList.add('is-pending');
+            }
+
+            const label = document.createElement('strong');
+            label.textContent = role === 'assistant' ? '智随' : '你';
+
+            const body = document.createElement('div');
+            body.className = 'ai-message-body';
+            if (role === 'assistant' && !pending) {
+                body.innerHTML = renderAssistantContent(content);
+            } else {
+                body.textContent = content;
+            }
+
+            item.appendChild(label);
+            item.appendChild(body);
+            thread.appendChild(item);
+            thread.scrollTop = thread.scrollHeight;
+            return item;
+        }
+
+        function readOptions() {
+            return {
+                include_basic: checkboxes.include_basic.checked,
+                include_latest_treatment: checkboxes.include_latest_treatment.checked,
+                include_recent_followups: checkboxes.include_recent_followups.checked,
+                include_full_history: checkboxes.include_full_history.checked,
+                model: modelSelect.value,
+            };
+        }
+
+        appendMessage(
+            'assistant',
+            '我可以基于当前患者资料帮你做摘要、风险提示、随访重点整理和科研记录建议。离开本页后，本次对话不会保留。',
+            false
+        );
+
+        launcher.addEventListener('click', openDrawer);
+        closeButton.addEventListener('click', closeDrawer);
+        overlay.addEventListener('click', closeDrawer);
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const message = input.value.trim();
+            if (!message) {
+                return;
+            }
+
+            openDrawer();
+            appendMessage('user', message, false);
+            input.value = '';
+            submitButton.disabled = true;
+
+            const pending = appendMessage('assistant', '正在分析，请稍候……', true);
+
+            try {
+                const response = await fetch(root.dataset.chatUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        message,
+                        history,
+                        ...readOptions(),
+                    }),
+                });
+                const data = await response.json();
+                pending.remove();
+
+                if (!response.ok || !data.ok) {
+                    appendMessage('assistant', data.error || '智随暂时不可用，请稍后重试。', false);
+                    return;
+                }
+
+                appendMessage('assistant', data.reply, false);
+                history = history.concat(
+                    [{ role: 'user', content: message }],
+                    [{ role: 'assistant', content: data.reply }]
+                ).slice(-8);
+            } catch (error) {
+                pending.remove();
+                appendMessage('assistant', '智随连接失败，请稍后重试。', false);
+            } finally {
+                submitButton.disabled = false;
+                input.focus();
+            }
+        });
+
+        window.addEventListener('pagehide', function () {
+            history = [];
+        });
+    }());
+</script>
+{% endblock %}

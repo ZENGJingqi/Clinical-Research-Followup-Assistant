@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <h1>{{ page_title }}</h1>
+    </div>
+</section>
+
+<section class="template-manage-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
+    {% for item in modules %}
+        <article class="card template-manage-card">
+            <div class="card-headings">
+                <h2>{{ item.title }}</h2>
+                <p>{{ item.description }}</p>
+            </div>
+            <div class="card-actions">
+                <a class="button button-secondary button-small" href="{{ item.url }}">进入</a>
+            </div>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}

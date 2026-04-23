@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <h1>{{ page_title }}</h1>
+        <p>集中管理账号、角色、项目权限与历史数据修改范围。</p>
+    </div>
+    <a class="button" href="{% url 'account_create' %}">新建账号</a>
+</section>
+
+<section class="panel">
+    <p class="inline-note">默认规则：管理员 365 天、普通账号 3 天；管理员和普通账号均按项目分配权限。</p>
+    {% if admin_shortcuts %}
+        <div class="toolbar-actions top-gap">
+            {% for item in admin_shortcuts %}
+                <a class="button button-secondary" href="{{ item.url }}">{{ item.label }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>用户名</th>
+                    <th>姓名</th>
+                    <th>角色</th>
+                    <th>可修改/删除天数</th>
+                    <th>项目权限</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in account_rows %}
+                    <tr>
+                        <td>{{ row.user.username }}</td>
+                        <td>{{ row.user.first_name|default:"-" }}</td>
+                        <td>{{ row.role_label }}</td>
+                        <td>{{ row.modify_window_days }}</td>
+                        <td>{{ row.project_scope_text }}</td>
+                        <td>{{ row.user.date_joined|date:"Y-m-d H:i" }}</td>
+                        <td class="row-actions">
+                            {% if row.can_manage %}
+                                <a href="{% url 'account_update' row.user.pk %}">编辑</a>
+                                {% if row.can_delete %}
+                                    <a href="{% url 'account_delete' row.user.pk %}">删除</a>
+                                {% endif %}
+                            {% else %}
+                                <span>系统账号</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">暂无账号。</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

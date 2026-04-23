@@ -1,0 +1,883 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <div class="section-title followup-page-head">
+        <h1>{{ page_title }}</h1>
+        <p><strong>{{ treatment.patient.name }}</strong><span>治疗方案：</span>{{ treatment.treatment_name }}</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="form-card followup-form-card">
+        {% csrf_token %}
+        {{ form.scale_records_json }}
+
+        {% if scheduled_next_followup_date %}
+            <p class="inline-note">当前计划的下次随访日期是 {{ scheduled_next_followup_date }}。本次随访默认录入今天，你也可以改成实际随访日期。</p>
+        {% else %}
+            <p class="inline-note">下次建议随访日期默认按本次随访后 {{ followup_interval_days }} 天生成。</p>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="message">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="form-grid followup-meta-grid">
+            <div class="field-box">
+                <label for="{{ form.visit_number.id_for_label }}">{{ form.visit_number.label }}</label>
+                {{ form.visit_number }}
+                {{ form.visit_number.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.followup_date.id_for_label }}">{{ form.followup_date.label }}</label>
+                {{ form.followup_date }}
+                {{ form.followup_date.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.next_followup_in_days.id_for_label }}">{{ form.next_followup_in_days.label }}</label>
+                <div class="input-with-suffix">
+                    {{ form.next_followup_in_days }}
+                    <span>天</span>
+                </div>
+                {{ form.next_followup_in_days.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.planned_next_followup_date.id_for_label }}">{{ form.planned_next_followup_date.label }}</label>
+                {{ form.planned_next_followup_date }}
+                {{ form.planned_next_followup_date.errors }}
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-two followup-brief-grid">
+            <div class="field-box">
+                <label for="{{ form.symptoms.id_for_label }}">{{ form.symptoms.label }}</label>
+                {{ form.symptoms }}
+                {{ form.symptoms.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.auxiliary_exam_results.id_for_label }}">{{ form.auxiliary_exam_results.label }}</label>
+                {{ form.auxiliary_exam_results }}
+                {{ form.auxiliary_exam_results.errors }}
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-two followup-brief-grid">
+            <div class="field-box">
+                <label for="{{ form.medication_adherence.id_for_label }}">{{ form.medication_adherence.label }}</label>
+                {{ form.medication_adherence }}
+                {{ form.medication_adherence.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.adverse_events.id_for_label }}">{{ form.adverse_events.label }}</label>
+                {{ form.adverse_events }}
+                {{ form.adverse_events.errors }}
+            </div>
+        </div>
+
+        <section class="panel top-gap">
+            <div class="list-head">
+                <h2>量表模块</h2>
+                <button type="button" class="button button-secondary" id="add-scale-record">添加量表</button>
+            </div>
+            <div id="scale-records-container"></div>
+        </section>
+
+        <div class="scale-editor" id="followup-scale-editor">
+            <div class="scale-overlay" id="followup-scale-overlay" hidden></div>
+            <aside class="scale-drawer" id="followup-scale-drawer" aria-hidden="true">
+                <div class="scale-drawer-head">
+                    <div>
+                        <h2 id="followup-scale-drawer-title">量表录入</h2>
+                        <p>在此完成量表填写，保存后回写到随访表单。</p>
+                    </div>
+                    <button type="button" class="button button-secondary button-small" id="followup-scale-close">关闭</button>
+                </div>
+                <div class="field-box" id="followup-scale-template-box">
+                    <label for="followup-scale-template-search">量表模板</label>
+                    <input
+                        type="text"
+                        id="followup-scale-template-search"
+                        placeholder="输入量表名称模糊检索"
+                        list="followup-scale-template-options"
+                        autocomplete="off"
+                    >
+                    <datalist id="followup-scale-template-options"></datalist>
+                    <select id="followup-scale-template-select" hidden></select>
+                </div>
+                <div class="scale-drawer-body" id="followup-scale-body"></div>
+                <div class="scale-drawer-actions">
+                    <button type="button" class="button" id="followup-scale-save">保存量表</button>
+                </div>
+            </aside>
+        </div>
+
+        <div class="field-box top-gap">
+            <label class="top-gap">添加附件</label>
+            <div class="form-grid form-grid-two">
+                <div class="field-box">
+                    <input type="text" id="id_auxiliary_custom_name" maxlength="120" placeholder="附件名称（必填）">
+                </div>
+                <div class="field-box">
+                    <input type="file" id="id_auxiliary_exam_files" name="auxiliary_exam_files">
+                </div>
+            </div>
+            <button type="button" class="button button-secondary top-gap" id="add-auxiliary-file">确定添加</button>
+            <input type="hidden" id="id_auxiliary_exam_file_meta_json" name="auxiliary_exam_file_meta_json" value="[]">
+            <small class="helptext">支持图片、Word、PDF 等文件；每个文件不超过 5MB，上传后会记录上传人和上传时间。</small>
+            {% if form.instance.pk and form.instance.auxiliary_attachments.all %}
+                <div class="top-gap">
+                    <strong>已上传附件</strong>
+                    <ul id="auxiliary-pending-list" class="inline-list top-gap"></ul>
+                    <ul class="inline-list">
+                        {% for attachment in form.instance.auxiliary_attachments.all %}
+                            <li id="attachment-item-{{ attachment.pk }}" class="attachment-row">
+                                <a href="{% url 'auxiliary_attachment_download' attachment.pk %}">{{ attachment.original_name|default:attachment.file.name }}</a>
+                                <span class="attachment-meta">{{ attachment.created_at|date:"Y-m-d H:i" }} · {{ attachment.uploaded_by.first_name|default:attachment.uploaded_by.username|default:"-" }}</span>
+                                <a class="button button-secondary attachment-preview-btn" href="{% url 'auxiliary_attachment_preview' attachment.pk %}" target="_blank" rel="noopener">预览</a>
+                                <button
+                                    type="button"
+                                    class="button button-secondary attachment-delete-btn"
+                                    data-delete-url="{% url 'auxiliary_attachment_delete' attachment.pk %}"
+                                >
+                                    删除
+                                </button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <div class="top-gap">
+                    <strong>已上传附件</strong>
+                    <ul id="auxiliary-pending-list" class="inline-list top-gap"></ul>
+                    <ul class="inline-list">
+                        <li class="attachment-empty">暂无附件</li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="field-box top-gap followup-notes-box">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {{ form.notes.errors }}
+        </div>
+
+        <div class="toolbar-actions">
+            <button class="button" type="submit">{{ submit_label }}</button>
+            <a class="button button-secondary" href="{% url 'patient_detail' treatment.patient.pk %}">返回详情</a>
+        </div>
+    </form>
+</section>
+
+<script>
+    (function () {
+        const currentFollowupDate = document.getElementById('id_followup_date');
+        const nextFollowupDate = document.getElementById('id_planned_next_followup_date');
+        const nextFollowupInDays = document.getElementById('id_next_followup_in_days');
+        const defaultIntervalDays = {{ followup_interval_days|default:14 }};
+        const scaleTemplateApiUrl = '{% url "scale_template_payload" %}';
+        const scaleJsonField = document.getElementById('id_scale_records_json');
+        const scaleContainer = document.getElementById('scale-records-container');
+        const addScaleRecordButton = document.getElementById('add-scale-record');
+        const scaleEditorRoot = document.getElementById('followup-scale-editor');
+        const scaleOverlay = document.getElementById('followup-scale-overlay');
+        const scaleDrawer = document.getElementById('followup-scale-drawer');
+        const scaleCloseButton = document.getElementById('followup-scale-close');
+        const scaleSaveButton = document.getElementById('followup-scale-save');
+        const scaleBody = document.getElementById('followup-scale-body');
+        const scaleTemplateBox = document.getElementById('followup-scale-template-box');
+        const scaleTemplateSelect = document.getElementById('followup-scale-template-select');
+        const scaleTemplateSearchInput = document.getElementById('followup-scale-template-search');
+        const scaleTemplateOptions = document.getElementById('followup-scale-template-options');
+        const scaleDrawerTitle = document.getElementById('followup-scale-drawer-title');
+        const auxiliaryFilesInput = document.getElementById('id_auxiliary_exam_files');
+        const auxiliaryCustomNameInput = document.getElementById('id_auxiliary_custom_name');
+        const addAuxiliaryFileButton = document.getElementById('add-auxiliary-file');
+        const auxiliaryFileMetaField = document.getElementById('id_auxiliary_exam_file_meta_json');
+        const auxiliaryPendingList = document.getElementById('auxiliary-pending-list');
+        let scaleRecords = [];
+        let editingScaleIndex = null;
+        let editingScaleDraft = null;
+        let scaleTemplates = [];
+        const auxiliaryPendingFiles = [];
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function syncAuxiliaryFileInput() {
+            if (!auxiliaryFilesInput || typeof DataTransfer === 'undefined') {
+                return;
+            }
+            const dataTransfer = new DataTransfer();
+            auxiliaryPendingFiles.forEach((item) => dataTransfer.items.add(item.file));
+            auxiliaryFilesInput.files = dataTransfer.files;
+        }
+
+        function syncAuxiliaryFileMeta() {
+            if (!auxiliaryFileMetaField) {
+                return;
+            }
+            const rows = auxiliaryPendingFiles.map((item) => ({ name: item.name || '', note: '' }));
+            auxiliaryFileMetaField.value = JSON.stringify(rows);
+        }
+
+        function renderAuxiliaryPendingList() {
+            if (!auxiliaryPendingList || !auxiliaryFileMetaField) {
+                return;
+            }
+            if (!auxiliaryPendingFiles.length) {
+                auxiliaryPendingList.innerHTML = '';
+                auxiliaryFileMetaField.value = '[]';
+                return;
+            }
+            auxiliaryPendingList.innerHTML = auxiliaryPendingFiles.map((item, index) => `
+                <li class="attachment-row">
+                    <span>${escapeHtml(item.name || item.file.name)}</span>
+                    <span class="attachment-meta">待保存 · ${escapeHtml(item.file.name)}</span>
+                    <button type="button" class="button button-secondary" data-remove-file-index="${index}">删除</button>
+                </li>
+            `).join('');
+            syncAuxiliaryFileInput();
+            syncAuxiliaryFileMeta();
+        }
+
+        function addSelectedAuxiliaryFiles() {
+            if (!auxiliaryFilesInput) {
+                return;
+            }
+            const selected = Array.from(auxiliaryFilesInput.files || []);
+            if (!selected.length) {
+                return;
+            }
+            const file = selected[0];
+            const customName = String(auxiliaryCustomNameInput?.value || '').trim();
+            if (!customName) {
+                window.alert('请先填写附件名称。');
+                return;
+            }
+            auxiliaryPendingFiles.push({
+                file,
+                name: customName,
+                note: '',
+            });
+            auxiliaryFilesInput.value = '';
+            if (auxiliaryCustomNameInput) {
+                auxiliaryCustomNameInput.value = '';
+            }
+            renderAuxiliaryPendingList();
+        }
+
+        function parseDate(value) {
+            return window.followupDateUtils ? window.followupDateUtils.parseDateValue(value) : null;
+        }
+
+        function formatDate(date) {
+            return window.followupDateUtils ? window.followupDateUtils.formatDateObject(date) : '';
+        }
+
+        function syncPlannedDateFromDays() {
+            if (!currentFollowupDate || !nextFollowupDate || !nextFollowupInDays) {
+                return;
+            }
+            const baseDate = parseDate(currentFollowupDate.value);
+            const days = parseInt(nextFollowupInDays.value || '', 10);
+            if (!baseDate || Number.isNaN(days)) {
+                return;
+            }
+            const target = new Date(baseDate);
+            target.setDate(target.getDate() + days);
+            if (nextFollowupDate._flatpickr) {
+                nextFollowupDate._flatpickr.setDate(target, true);
+            } else {
+                nextFollowupDate.value = formatDate(target);
+            }
+            nextFollowupDate.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function syncDaysFromPlannedDate() {
+            if (!currentFollowupDate || !nextFollowupDate || !nextFollowupInDays) {
+                return;
+            }
+            const baseDate = parseDate(currentFollowupDate.value);
+            const plannedDate = parseDate(nextFollowupDate.value);
+            if (!baseDate || !plannedDate) {
+                return;
+            }
+            const diff = Math.round((plannedDate - baseDate) / 86400000);
+            nextFollowupInDays.value = diff >= 0 ? diff : 0;
+        }
+
+        function syncScaleJson() {
+            scaleJsonField.value = JSON.stringify(scaleRecords);
+        }
+
+        function renderScaleAnswerControl(item, answer, scaleIndex, itemIndex) {
+            const value = answer.value ?? answer.score ?? '';
+            const commonAttrs = `data-scale-index="${scaleIndex}" data-answer-index="${itemIndex}" data-answer-key="value"`;
+            const missingClass = isAnswerFilled(item, answer) ? '' : 'scale-missing-input';
+            if (item.field_type === 'score' || item.field_type === 'number') {
+                return `
+                    <input type="number" class="${missingClass}" min="${item.score_min}" max="${item.score_max}" value="${escapeHtml(value)}" ${commonAttrs}>
+                    ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+                `;
+            }
+            if (item.field_type === 'textarea') {
+                return `
+                    <textarea rows="2" class="${missingClass}" ${commonAttrs}>${escapeHtml(value || '')}</textarea>
+                    ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+                `;
+            }
+            if (item.field_type === 'select') {
+                const optionsHtml = ['<option value="">请选择</option>'].concat(
+                    (item.options || []).map((option) => `<option value="${escapeHtml(option)}" ${option === value ? 'selected' : ''}>${escapeHtml(option)}</option>`)
+                ).join('');
+                return `
+                    <select class="${missingClass}" ${commonAttrs}>${optionsHtml}</select>
+                    ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+                `;
+            }
+            return `
+                <input type="text" class="${missingClass}" value="${escapeHtml(value || '')}" ${commonAttrs}>
+                ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+            `;
+        }
+
+        function updateScaleInputMissingState(element) {
+            if (!element || !('value' in element)) {
+                return;
+            }
+            const value = String(element.value || '').trim();
+            element.classList.toggle('scale-missing-input', !value);
+        }
+
+        function isAnswerFilled(item, answer) {
+            if (!item || item.field_type === 'group') {
+                return true;
+            }
+            const value = answer ? (answer.value ?? answer.score ?? '') : '';
+            return String(value ?? '').trim() !== '';
+        }
+
+        function countScaleAnswerableItems(template) {
+            return (template?.items || []).filter((item) => item.field_type !== 'group').length;
+        }
+
+        function findAnswerIndexByKey(record, itemKey) {
+            return (record.answers || []).findIndex((item) => item && item.key === itemKey);
+        }
+
+        function countFilledAnswers(record) {
+            return (record.answers || []).filter((item) => {
+                const value = item ? (item.value ?? item.score ?? '') : '';
+                return value !== '' && value !== null && value !== undefined;
+            }).length;
+        }
+
+        function calculateDraftTotal(record, template) {
+            let total = 0;
+            let hasScore = false;
+            (template.items || []).forEach((item) => {
+                if (item.field_type !== 'score') {
+                    return;
+                }
+                const answerIndex = findAnswerIndexByKey(record, item.key);
+                const answer = answerIndex >= 0 ? (record.answers || [])[answerIndex] : {};
+                const value = answer.value ?? answer.score ?? '';
+                if (value === '' || value === null || value === undefined) {
+                    return;
+                }
+                const numericValue = Number(value);
+                if (!Number.isNaN(numericValue)) {
+                    total += numericValue;
+                    hasScore = true;
+                }
+            });
+            return hasScore ? total : null;
+        }
+
+        function clearScaleValidationState() {
+            scaleBody?.querySelectorAll('.scale-invalid-input').forEach((node) => {
+                node.classList.remove('scale-invalid-input');
+            });
+        }
+
+        function validateScaleDraftBeforeSave(template) {
+            clearScaleValidationState();
+            if (!editingScaleDraft || !template) {
+                return { ok: true };
+            }
+            const itemMap = new Map((template.items || []).map((item) => [item.key, item]));
+            for (let answerIndex = 0; answerIndex < (editingScaleDraft.answers || []).length; answerIndex += 1) {
+                const answer = (editingScaleDraft.answers || [])[answerIndex];
+                const templateItem = itemMap.get(answer.key);
+                if (!templateItem) {
+                    continue;
+                }
+                if (!['score', 'number'].includes(templateItem.field_type)) {
+                    continue;
+                }
+                const raw = String(answer.value ?? '').trim();
+                if (!raw) {
+                    continue;
+                }
+                if (!/^-?\d+$/.test(raw)) {
+                    return {
+                        ok: false,
+                        answerIndex,
+                        label: templateItem.label || answer.label || '数值题',
+                        message: `“${templateItem.label || answer.label}”只能填写整数。`,
+                    };
+                }
+                const numericValue = Number(raw);
+                const min = Number(templateItem.score_min);
+                const max = Number(templateItem.score_max);
+                if (!Number.isNaN(min) && numericValue < min) {
+                    return {
+                        ok: false,
+                        answerIndex,
+                        label: templateItem.label || answer.label || '数值题',
+                        message: `“${templateItem.label || answer.label}”必须在 ${min}~${max} 范围内。`,
+                    };
+                }
+                if (!Number.isNaN(max) && numericValue > max) {
+                    return {
+                        ok: false,
+                        answerIndex,
+                        label: templateItem.label || answer.label || '数值题',
+                        message: `“${templateItem.label || answer.label}”必须在 ${min}~${max} 范围内。`,
+                    };
+                }
+            }
+            return { ok: true };
+        }
+
+        function buildSectionRows(section) {
+            const items = section.items || [];
+            const childrenMap = new Map();
+            items.forEach((item) => {
+                if (item.parent_key) {
+                    if (!childrenMap.has(item.parent_key)) {
+                        childrenMap.set(item.parent_key, []);
+                    }
+                    childrenMap.get(item.parent_key).push(item);
+                }
+            });
+            return items
+                .filter((item) => !item.parent_key || !items.some((candidate) => candidate.key === item.parent_key))
+                .map((item) => ({ item, children: childrenMap.get(item.key) || [] }));
+        }
+
+        function refreshTemplateOptions() {
+            if (!scaleTemplateSelect) {
+                return;
+            }
+            scaleTemplateSelect.innerHTML = ['<option value=""></option>'].concat(
+                scaleTemplates.map((item) => (
+                    `<option value="${item.id}">${escapeHtml(item.name)}</option>`
+                ))
+            ).join('');
+            if (scaleTemplateOptions) {
+                scaleTemplateOptions.innerHTML = scaleTemplates.map((item) => (
+                    `<option value="${escapeHtml(item.name)}"></option>`
+                )).join('');
+            }
+        }
+
+        function loadScaleTemplatePayload() {
+            return window
+                .fetch(scaleTemplateApiUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                })
+                .then((response) => (response.ok ? response.json() : { results: [] }))
+                .then((payload) => {
+                    scaleTemplates = Array.isArray(payload.results) ? payload.results : [];
+                    refreshTemplateOptions();
+                })
+                .catch(() => {
+                    scaleTemplates = [];
+                    refreshTemplateOptions();
+                });
+        }
+
+        function syncScaleTemplateSearchFromSelect() {
+            if (!scaleTemplateSearchInput || !scaleTemplateSelect) {
+                return;
+            }
+            const selected = scaleTemplates.find((item) => String(item.id) === String(scaleTemplateSelect.value));
+            scaleTemplateSearchInput.value = selected ? selected.name : '';
+        }
+
+        function syncScaleTemplateSelectFromSearch() {
+            if (!scaleTemplateSearchInput || !scaleTemplateSelect) {
+                return false;
+            }
+            const keyword = String(scaleTemplateSearchInput.value || '').trim().toLowerCase();
+            if (!keyword) {
+                return false;
+            }
+            let target = scaleTemplates.find((item) => String(item.name || '').trim().toLowerCase() === keyword);
+            if (!target) {
+                target = scaleTemplates.find((item) => String(item.name || '').toLowerCase().includes(keyword));
+            }
+            if (!target) {
+                return false;
+            }
+            scaleTemplateSelect.value = String(target.id);
+            scaleTemplateSearchInput.value = target.name;
+            return true;
+        }
+
+        function applyScaleTemplateSearchSelection() {
+            if (editingScaleIndex !== null) {
+                return;
+            }
+            if (!syncScaleTemplateSelectFromSearch()) {
+                return;
+            }
+            const template = scaleTemplates.find((item) => String(item.id) === scaleTemplateSelect.value);
+            if (!template) {
+                return;
+            }
+            editingScaleDraft = {
+                template_id: template.id,
+                template_name: template.name,
+                notes: '',
+                answers: template.items
+                    .filter((item) => item.field_type !== 'group')
+                    .map((item) => ({
+                    key: item.key,
+                    label: item.label,
+                    field_type: item.field_type,
+                    group_key: item.group_key,
+                    parent_key: item.parent_key,
+                    value: '',
+                    note: '',
+                })),
+            };
+            renderScaleDrawerBody();
+        }
+
+        function openScaleDrawer(record, index) {
+            if (!scaleTemplates.length || !scaleEditorRoot) {
+                return;
+            }
+            editingScaleIndex = index;
+            editingScaleDraft = JSON.parse(JSON.stringify(record));
+            scaleEditorRoot.classList.add('is-open');
+            scaleDrawer.setAttribute('aria-hidden', 'false');
+            scaleOverlay.hidden = false;
+            scaleDrawerTitle.textContent = index === null ? '新增量表' : '编辑量表';
+            refreshTemplateOptions();
+            scaleTemplateSelect.value = String(editingScaleDraft.template_id);
+            syncScaleTemplateSearchFromSelect();
+            scaleTemplateBox.hidden = index !== null;
+            renderScaleDrawerBody();
+        }
+
+        function closeScaleDrawer() {
+            scaleEditorRoot.classList.remove('is-open');
+            scaleDrawer.setAttribute('aria-hidden', 'true');
+            scaleOverlay.hidden = true;
+            editingScaleIndex = null;
+            editingScaleDraft = null;
+        }
+
+        function renderScaleDrawerBody() {
+            if (!editingScaleDraft) {
+                scaleBody.innerHTML = '';
+                return;
+            }
+            if (!editingScaleDraft.template_id) {
+                scaleBody.innerHTML = '<p class="term-alias">请先选择量表模板，选择后会显示题目。</p>';
+                return;
+            }
+            const template = scaleTemplates.find((item) => item.id === Number(editingScaleDraft.template_id));
+            if (!template) {
+                scaleBody.innerHTML = '<p class="term-alias">未找到量表模板。</p>';
+                return;
+            }
+            let itemsHtml = '';
+            (template.sections || []).forEach((section) => {
+                const sectionRows = buildSectionRows(section).map(({ item, children }) => {
+                    const answerIndex = findAnswerIndexByKey(editingScaleDraft, item.key);
+                    const answer = answerIndex >= 0 ? editingScaleDraft.answers[answerIndex] : {};
+                    const childHtml = children.map((child) => {
+                        const childAnswerIndex = findAnswerIndexByKey(editingScaleDraft, child.key);
+                        const childAnswer = childAnswerIndex >= 0 ? editingScaleDraft.answers[childAnswerIndex] : {};
+                        return `
+                            <div class="scale-drawer-child">
+                                <div class="scale-drawer-question-head">
+                                    <strong>${escapeHtml(child.label)}</strong>
+                                    <span>${escapeHtml(child.field_type === 'score' ? `${child.score_min} - ${child.score_max} 分` : child.field_type)}</span>
+                                </div>
+                                <div class="field-box">
+                                    ${renderScaleAnswerControl(child, childAnswer, editingScaleIndex ?? 0, childAnswerIndex)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    return `
+                        <section class="scale-drawer-question">
+                            <div class="scale-drawer-question-head">
+                                <strong>${escapeHtml(item.label)}</strong>
+                                <span>${escapeHtml(item.field_type === 'score' ? `${item.score_min} - ${item.score_max} 分` : item.field_type)}</span>
+                            </div>
+                            <div class="field-box">
+                                ${renderScaleAnswerControl(item, answer, editingScaleIndex ?? 0, answerIndex)}
+                            </div>
+                            ${childHtml ? `<div class="scale-drawer-children">${childHtml}</div>` : ''}
+                        </section>
+                    `;
+                }).join('');
+                itemsHtml += `
+                    <section class="scale-drawer-section">
+                        <div class="scale-drawer-section-head">
+                            <strong>${escapeHtml(section.title)}</strong>
+                            ${section.description ? `<span>${escapeHtml(section.description)}</span>` : ''}
+                        </div>
+                        <div class="scale-drawer-section-body">
+                            ${sectionRows}
+                        </div>
+                    </section>
+                `;
+            });
+            scaleBody.innerHTML = `
+                <div class="scale-drawer-summary">
+                    <strong>${escapeHtml(template.name)}</strong>
+                    <span>${escapeHtml(template.description || '无说明')}</span>
+                </div>
+                ${itemsHtml}
+                <div class="field-box">
+                    <label>量表备注</label>
+                    <textarea rows="3" data-scale-key="notes">${escapeHtml(editingScaleDraft.notes || '')}</textarea>
+                </div>
+            `;
+        }
+
+        function renderScaleRecords() {
+            scaleContainer.innerHTML = '';
+            scaleRecords.forEach((record, index) => {
+                const template = scaleTemplates.find((item) => item.id === Number(record.template_id));
+                if (!template) {
+                    return;
+                }
+                const filledCount = countFilledAnswers(record);
+                const answerableCount = countScaleAnswerableItems(template);
+                const isIncomplete = filledCount < answerableCount;
+                const wrapper = document.createElement('section');
+                wrapper.className = `scale-record-card ${isIncomplete ? 'is-incomplete' : ''}`;
+                wrapper.innerHTML = `
+                    <div class="scale-record-head">
+                        <div class="scale-record-main">
+                            <h3>${escapeHtml(template.name)}</h3>
+                            <p>${escapeHtml(template.description || '无说明')}</p>
+                        </div>
+                        <div class="scale-record-side">
+                            <span class="scale-count-chip ${isIncomplete ? 'is-incomplete' : ''}">${filledCount}/${answerableCount} 项</span>
+                        </div>
+                    </div>
+                    <div class="scale-record-actions">
+                        <button type="button" class="button button-secondary button-small" data-edit-scale="${index}">编辑量表</button>
+                        <button type="button" class="button button-secondary button-small" data-remove-scale="${index}">删除量表</button>
+                    </div>
+                `;
+                scaleContainer.appendChild(wrapper);
+            });
+            syncScaleJson();
+        }
+
+        function addScaleRecord() {
+            if (!scaleTemplates.length) {
+                return;
+            }
+            openScaleDrawer({
+                template_id: '',
+                template_name: '',
+                notes: '',
+                answers: [],
+            }, null);
+        }
+
+        try {
+            scaleRecords = JSON.parse(scaleJsonField.value || '[]');
+        } catch (error) {
+            scaleRecords = [];
+        }
+
+        if (currentFollowupDate && nextFollowupDate && nextFollowupInDays) {
+            if (!nextFollowupInDays.value) {
+                nextFollowupInDays.value = defaultIntervalDays;
+            }
+            currentFollowupDate.addEventListener('change', syncPlannedDateFromDays);
+            currentFollowupDate.addEventListener('blur', syncPlannedDateFromDays);
+            nextFollowupInDays.addEventListener('input', syncPlannedDateFromDays);
+            nextFollowupDate.addEventListener('change', syncDaysFromPlannedDate);
+            nextFollowupDate.addEventListener('blur', syncDaysFromPlannedDate);
+        }
+
+        scaleContainer.addEventListener('click', function (event) {
+            const editIndex = event.target.dataset.editScale;
+            if (editIndex !== undefined) {
+                openScaleDrawer(scaleRecords[Number(editIndex)], Number(editIndex));
+                return;
+            }
+            const index = event.target.dataset.removeScale;
+            if (index === undefined) {
+                return;
+            }
+            scaleRecords.splice(Number(index), 1);
+            renderScaleRecords();
+        });
+
+        scaleBody.addEventListener('input', function (event) {
+            if (!editingScaleDraft) {
+                return;
+            }
+            if (event.target.classList.contains('scale-invalid-input')) {
+                event.target.classList.remove('scale-invalid-input');
+            }
+            if (event.target.dataset.scaleKey === 'notes') {
+                editingScaleDraft.notes = event.target.value;
+                return;
+            }
+            const answerIndex = Number(event.target.dataset.answerIndex);
+            const answerKey = event.target.dataset.answerKey;
+            if (Number.isNaN(answerIndex) || !answerKey || !editingScaleDraft.answers[answerIndex]) {
+                return;
+            }
+            editingScaleDraft.answers[answerIndex][answerKey] = event.target.value;
+            updateScaleInputMissingState(event.target);
+        });
+
+        scaleTemplateSelect.addEventListener('change', function () {
+            if (editingScaleIndex !== null) {
+                return;
+            }
+            syncScaleTemplateSearchFromSelect();
+            const template = scaleTemplates.find((item) => String(item.id) === scaleTemplateSelect.value);
+            if (!template) {
+                return;
+            }
+            editingScaleDraft = {
+                template_id: template.id,
+                template_name: template.name,
+                notes: '',
+                answers: template.items
+                    .filter((item) => item.field_type !== 'group')
+                    .map((item) => ({
+                    key: item.key,
+                    label: item.label,
+                    field_type: item.field_type,
+                    group_key: item.group_key,
+                    parent_key: item.parent_key,
+                    value: '',
+                    note: '',
+                })),
+            };
+            renderScaleDrawerBody();
+        });
+
+        scaleTemplateSearchInput?.addEventListener('change', applyScaleTemplateSearchSelection);
+        scaleTemplateSearchInput?.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter') {
+                return;
+            }
+            event.preventDefault();
+            applyScaleTemplateSearchSelection();
+        });
+
+        scaleSaveButton.addEventListener('click', function () {
+            if (!editingScaleDraft) {
+                return;
+            }
+            const template = scaleTemplates.find((item) => item.id === Number(editingScaleDraft.template_id));
+            if (!template) {
+                window.alert('请先选择量表模板。');
+                return;
+            }
+            const validation = validateScaleDraftBeforeSave(template);
+            if (!validation.ok) {
+                const invalidInput = scaleBody?.querySelector(`[data-answer-index="${validation.answerIndex}"][data-answer-key="value"]`);
+                if (invalidInput) {
+                    invalidInput.classList.add('scale-invalid-input');
+                    invalidInput.focus();
+                }
+                window.alert(validation.message || '量表数值填写不正确，请检查后再保存。');
+                return;
+            }
+            editingScaleDraft.template_name = template.name;
+            if (editingScaleIndex === null) {
+                scaleRecords.push(JSON.parse(JSON.stringify(editingScaleDraft)));
+            } else {
+                scaleRecords[editingScaleIndex] = JSON.parse(JSON.stringify(editingScaleDraft));
+            }
+            renderScaleRecords();
+            closeScaleDrawer();
+        });
+
+        scaleCloseButton.addEventListener('click', closeScaleDrawer);
+        scaleOverlay.addEventListener('click', closeScaleDrawer);
+
+        addScaleRecordButton.addEventListener('click', function () {
+            addScaleRecord();
+        });
+        addAuxiliaryFileButton?.addEventListener('click', addSelectedAuxiliaryFiles);
+        auxiliaryPendingList?.addEventListener('click', function (event) {
+            const removeIndex = Number(event.target.dataset.removeFileIndex);
+            if (Number.isNaN(removeIndex)) {
+                return;
+            }
+            auxiliaryPendingFiles.splice(removeIndex, 1);
+            renderAuxiliaryPendingList();
+        });
+        auxiliaryFilesInput?.closest('form')?.addEventListener('submit', function () {
+            syncAuxiliaryFileInput();
+            syncAuxiliaryFileMeta();
+        });
+        document.querySelectorAll('.attachment-delete-btn').forEach((button) => {
+            button.addEventListener('click', function () {
+                const url = button.dataset.deleteUrl || '';
+                if (!url) {
+                    return;
+                }
+                const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+                window.fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                })
+                    .then((response) => response.json().catch(() => ({ ok: false })))
+                    .then((payload) => {
+                        if (!payload.ok) {
+                            window.alert(payload.error || '删除附件失败，请刷新后重试。');
+                            return;
+                        }
+                        button.closest('li')?.remove();
+                    })
+                    .catch(() => {
+                        window.alert('删除附件失败，请刷新后重试。');
+                    });
+            });
+        });
+
+        addScaleRecordButton.setAttribute('disabled', 'disabled');
+        syncScaleJson();
+        renderAuxiliaryPendingList();
+        loadScaleTemplatePayload().finally(function () {
+            renderScaleRecords();
+            addScaleRecordButton.removeAttribute('disabled');
+        });
+    }());
+</script>
+{% endblock %}

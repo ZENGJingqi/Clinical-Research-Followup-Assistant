@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page treatment-page">
+    <div class="section-title treatment-page-head" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:nowrap;">
+        <h1>{{ page_title }}</h1>
+        <div class="treatment-page-patient" style="display:flex;align-items:baseline;gap:10px;white-space:nowrap;margin-left:auto;font-size:22px;">
+            <strong style="font-size:24px;">{{ patient.name }}</strong>
+            <span>门诊号：</span>
+            <span>{{ patient.outpatient_number|default:"-" }}</span>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="form-card treatment-form-card">
+        {% csrf_token %}
+        {% include "followup/_treatment_form_fields.html" with form=form %}
+
+        <div class="toolbar-actions">
+            <button class="button" type="submit">{{ submit_label }}</button>
+            <a class="button button-secondary" href="{% url 'patient_detail' patient.pk %}">返回详情</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

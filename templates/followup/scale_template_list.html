@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page scale-page">
+    <div class="section-title">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <form method="post" class="form-card scale-form-card">
+        {% csrf_token %}
+        <div class="scale-card-head">
+            <div class="scale-card-title">
+                <h2>新增量表模板</h2>
+                <p>支持评分、数值、文本和单选等题型，用于诊疗与随访统一挂接。</p>
+            </div>
+            <button class="button" type="submit">保存量表</button>
+        </div>
+        {% if form.non_field_errors %}
+            <div class="message">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-grid scale-top-grid">
+            <div class="field-box scale-field-compact">
+                <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+            <div class="field-box scale-field-compact">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {{ form.description.errors }}
+            </div>
+        </div>
+        <div class="field-box scale-items-box">
+            <label for="{{ form.items_text.id_for_label }}">{{ form.items_text.label }}</label>
+            {{ form.items_text }}
+            {% if form.items_text.help_text %}
+                <small class="helptext scale-items-help">{{ form.items_text.help_text }}</small>
+            {% endif %}
+            {{ form.items_text.errors }}
+        </div>
+    </form>
+
+    <section class="panel top-gap scale-library-card">
+        <div class="list-head">
+            <div class="scale-card-title">
+                <h2>已录入量表</h2>
+                <p class="scale-library-tip">已保存模板会在诊疗和随访页按需挂接。这里重点核对结构、题型和条目数量。</p>
+            </div>
+        </div>
+        <div class="scale-group-list">
+            {% for item in templates %}
+                <details class="scale-group">
+                    <summary>
+                        <div class="scale-group-main">
+                            <strong>{{ item.name }}</strong>
+                            <span>{{ item.description|default:"暂无说明" }}</span>
+                        </div>
+                        <div class="scale-group-side">
+                            <span class="scale-count-chip">{{ item.items.count }} 题</span>
+                        </div>
+                    </summary>
+                    <div class="scale-preview-card">
+                        <div class="scale-preview-toolbar">
+                            <div class="row-actions">
+                                {% if item.record_count %}
+                                    <span>已使用（不可编辑/删除）</span>
+                                {% else %}
+                                    <a href="{% url 'scale_template_update' item.pk %}">编辑</a>
+                                    <a href="{% url 'scale_template_delete' item.pk %}">删除</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="scale-item-pill-list">
+                            {% for row in item.items.all %}
+                                <div class="scale-preview-row {% if row.field_type == 'group' %}is-group{% elif row.parent_key %}is-child{% endif %}">
+                                    <div class="scale-preview-label">
+                                        <strong>{{ row.label }}</strong>
+                                        <em>{{ row.get_field_type_display }}</em>
+                                    </div>
+                                    {% if row.help_text or row.field_type == "score" or row.field_type == "number" or row.options_text %}
+                                        <div class="scale-preview-meta">
+                                            {% if row.help_text %}
+                                                <span>{{ row.help_text }}</span>
+                                            {% endif %}
+                                            {% if row.field_type == "score" or row.field_type == "number" %}
+                                                <span>范围：{{ row.score_min }} - {{ row.score_max }}</span>
+                                            {% elif row.field_type == "select" and row.options_text %}
+                                                <span>选项：{{ row.options_text }}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                <div class="term-alias">暂无条目。</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </details>
+            {% empty %}
+                <div class="term-empty-cell">暂无量表模板。</div>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+{% endblock %}

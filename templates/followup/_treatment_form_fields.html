@@ -1,0 +1,1492 @@
+{{ form.prescription_items_json }}
+{{ form.scale_records_json }}
+
+{% if form.non_field_errors %}
+    <div class="message">{{ form.non_field_errors }}</div>
+{% endif %}
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.group_name.id_for_label }}">{{ form.group_name.label }}</label>
+        {{ form.group_name }}
+        {{ form.group_name.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.treatment_name.id_for_label }}">{{ form.treatment_name.label }}</label>
+        {{ form.treatment_name }}
+        {{ form.treatment_name.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-three">
+    <div class="field-box">
+        <label for="{{ form.start_date.id_for_label }}">{{ form.start_date.label }}</label>
+        {{ form.start_date }}
+        {{ form.start_date.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.admission_date.id_for_label }}">{{ form.admission_date.label }}</label>
+        {{ form.admission_date }}
+        {{ form.admission_date.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.discharge_date.id_for_label }}">{{ form.discharge_date.label }}</label>
+        {{ form.discharge_date }}
+        {{ form.discharge_date.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-three">
+    <div class="field-box">
+        <label for="{{ form.total_weeks.id_for_label }}">{{ form.total_weeks.label }}</label>
+        {{ form.total_weeks }}
+        {{ form.total_weeks.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.followup_interval_days.id_for_label }}">{{ form.followup_interval_days.label }}</label>
+        {{ form.followup_interval_days }}
+        {{ form.followup_interval_days.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.tcm_disease.id_for_label }}">{{ form.tcm_disease.label }}</label>
+        <div id="tcm-disease-editor"></div>
+        <div style="display:none;">{{ form.tcm_disease }}</div>
+        {{ form.tcm_disease.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.western_disease.id_for_label }}">{{ form.western_disease.label }}</label>
+        <div id="western-disease-editor"></div>
+        <div style="display:none;">{{ form.western_disease }}</div>
+        {{ form.western_disease.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two treatment-brief-grid">
+    <div class="field-box treatment-field-box treatment-field-box-wide">
+        <label for="{{ form.chief_complaint.id_for_label }}">{{ form.chief_complaint.label }}</label>
+        {{ form.chief_complaint }}
+        {{ form.chief_complaint.errors }}
+    </div>
+    <div class="field-box treatment-field-box treatment-field-box-wide">
+        <label for="{{ form.present_illness.id_for_label }}">{{ form.present_illness.label }}</label>
+        {{ form.present_illness }}
+        {{ form.present_illness.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.past_history.id_for_label }}">{{ form.past_history.label }}</label>
+        {{ form.past_history }}
+        {{ form.past_history.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.personal_history.id_for_label }}">{{ form.personal_history.label }}</label>
+        {{ form.personal_history }}
+        {{ form.personal_history.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.marital_history.id_for_label }}">{{ form.marital_history.label }}</label>
+        {{ form.marital_history }}
+        {{ form.marital_history.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.allergy_history.id_for_label }}">{{ form.allergy_history.label }}</label>
+        {{ form.allergy_history }}
+        {{ form.allergy_history.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.family_history.id_for_label }}">{{ form.family_history.label }}</label>
+        {{ form.family_history }}
+        {{ form.family_history.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.treatment_principle.id_for_label }}">{{ form.treatment_principle.label }}</label>
+        <div id="treatment-principle-editor"></div>
+        <div style="display:none;">{{ form.treatment_principle }}</div>
+        {{ form.treatment_principle.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.tongue_diagnosis.id_for_label }}">{{ form.tongue_diagnosis.label }}</label>
+        {{ form.tongue_diagnosis }}
+        {{ form.tongue_diagnosis.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.pulse_diagnosis.id_for_label }}">{{ form.pulse_diagnosis.label }}</label>
+        {{ form.pulse_diagnosis }}
+        {{ form.pulse_diagnosis.errors }}
+    </div>
+</div>
+
+<div class="form-grid form-grid-two">
+    <div class="field-box">
+        <label for="{{ form.pathogenesis.id_for_label }}">{{ form.pathogenesis.label }}</label>
+        <div id="pathogenesis-editor"></div>
+        <div style="display:none;">{{ form.pathogenesis }}</div>
+        {{ form.pathogenesis.errors }}
+    </div>
+    <div class="field-box">
+        <label for="{{ form.symptom_syndrome.id_for_label }}">{{ form.symptom_syndrome.label }}</label>
+        <div id="symptom-syndrome-editor"></div>
+        <div style="display:none;">{{ form.symptom_syndrome }}</div>
+        {{ form.symptom_syndrome.errors }}
+    </div>
+</div>
+
+<section class="panel top-gap treatment-module-card">
+    <div class="treatment-module-toolbar treatment-module-toolbar-inline" style="display:grid;grid-template-columns:auto minmax(240px,320px) auto;gap:10px;align-items:end;">
+        <div class="treatment-module-title" style="display:flex;align-items:center;white-space:nowrap;"><h2 style="margin:0;">处方模块</h2></div>
+        <div class="field-box treatment-module-template-field" style="min-width:0;">
+            <input
+                type="text"
+                id="prescription-template-search"
+                placeholder="检索处方模板"
+                list="prescription-template-options"
+                autocomplete="off"
+            >
+            <datalist id="prescription-template-options"></datalist>
+            <div style="display:none;">{{ form.prescription_template_id }}</div>
+        </div>
+        <div class="toolbar-actions treatment-module-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;">
+            <button type="button" class="button button-secondary" id="apply-prescription-template">应用模板</button>
+            <button type="button" class="button button-secondary" id="add-herb-row">新增药味</button>
+        </div>
+    </div>
+    <div class="prescription-pair-grid" id="prescription-items-body">
+    </div>
+    <div class="message" id="prescription-duplicate-message" hidden></div>
+    {{ form.prescription_items_json.errors }}
+    <div class="field-box top-gap">
+        <label for="{{ form.prescription_usage_method.id_for_label }}">{{ form.prescription_usage_method.label }}</label>
+        {{ form.prescription_usage_method }}
+        {{ form.prescription_usage_method.errors }}
+    </div>
+</section>
+
+<section class="panel top-gap treatment-module-card">
+    <div class="list-head">
+        <div><h2>量表模块</h2></div>
+        <button type="button" class="button button-secondary" id="add-scale-record">添加量表</button>
+    </div>
+    <div id="scale-records-container"></div>
+</section>
+
+<div class="scale-editor" id="treatment-scale-editor">
+    <div class="scale-overlay" id="treatment-scale-overlay" hidden></div>
+    <aside class="scale-drawer" id="treatment-scale-drawer" aria-hidden="true">
+        <div class="scale-drawer-head">
+            <div>
+                <h2 id="treatment-scale-drawer-title">量表录入</h2>
+                <p>在此完成量表填写，保存后回写到诊疗表单。</p>
+            </div>
+            <button type="button" class="button button-secondary button-small" id="treatment-scale-close">关闭</button>
+        </div>
+        <div class="field-box" id="treatment-scale-template-box">
+            <label for="treatment-scale-template-search">量表模板</label>
+            <input
+                type="text"
+                id="treatment-scale-template-search"
+                placeholder="输入量表名称模糊检索"
+                list="treatment-scale-template-options"
+                autocomplete="off"
+            >
+            <datalist id="treatment-scale-template-options"></datalist>
+            <select id="treatment-scale-template-select" hidden></select>
+        </div>
+        <div class="scale-drawer-body" id="treatment-scale-body"></div>
+        <div class="scale-drawer-actions">
+            <button type="button" class="button" id="treatment-scale-save">保存量表</button>
+        </div>
+    </aside>
+</div>
+
+<div class="field-box top-gap">
+    <label for="{{ form.auxiliary_exam_results.id_for_label }}">{{ form.auxiliary_exam_results.label }}</label>
+    {{ form.auxiliary_exam_results }}
+    {{ form.auxiliary_exam_results.errors }}
+    <label class="top-gap">添加附件</label>
+    <div class="form-grid form-grid-two">
+        <div class="field-box">
+            <input type="text" id="id_auxiliary_custom_name" maxlength="120" placeholder="附件名称（必填）">
+        </div>
+        <div class="field-box">
+            <input type="file" id="id_auxiliary_exam_files" name="auxiliary_exam_files">
+        </div>
+    </div>
+    <button type="button" class="button button-secondary top-gap" id="add-auxiliary-file">确定添加</button>
+    <input type="hidden" id="id_auxiliary_exam_file_meta_json" name="auxiliary_exam_file_meta_json" value="[]">
+    <small class="helptext">支持图片、Word、PDF 等文件；每个文件不超过 5MB，上传后会记录上传人和上传时间。</small>
+    <div class="top-gap">
+        <strong>已上传附件</strong>
+        <ul id="auxiliary-pending-list" class="inline-list top-gap"></ul>
+        <ul class="inline-list">
+            {% if form.instance.pk %}
+                {% for attachment in form.instance.auxiliary_attachments.all %}
+                    <li id="attachment-item-{{ attachment.pk }}" class="attachment-row">
+                        <a href="{% url 'auxiliary_attachment_download' attachment.pk %}">{{ attachment.original_name|default:attachment.file.name }}</a>
+                        <span class="attachment-meta">{{ attachment.created_at|date:"Y-m-d H:i" }} · {{ attachment.uploaded_by.first_name|default:attachment.uploaded_by.username|default:"-" }}</span>
+                        <a class="button button-secondary attachment-preview-btn" href="{% url 'auxiliary_attachment_preview' attachment.pk %}" target="_blank" rel="noopener">预览</a>
+                        <button
+                            type="button"
+                            class="button button-secondary attachment-delete-btn"
+                            data-delete-url="{% url 'auxiliary_attachment_delete' attachment.pk %}"
+                        >
+                            删除
+                        </button>
+                    </li>
+                {% empty %}
+                    <li class="attachment-empty">暂无附件</li>
+                {% endfor %}
+            {% else %}
+                <li class="attachment-empty">暂无附件</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+<div class="field-box">
+    <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+    {{ form.notes }}
+    {{ form.notes.errors }}
+</div>
+
+<script>
+    (function () {
+        const prescriptionTemplateApiUrl = '{% url "prescription_template_payload" %}';
+        const scaleTemplateApiUrl = '{% url "scale_template_payload" %}';
+        const prescriptionJsonField = document.getElementById('id_prescription_items_json');
+        const scaleJsonField = document.getElementById('id_scale_records_json');
+        const usageField = document.getElementById('id_prescription_usage_method');
+        const templateSelect = document.getElementById('id_prescription_template_id');
+        const templateOptions = document.getElementById('prescription-template-options');
+        const templateSearchInput = document.getElementById('prescription-template-search');
+        const applyTemplateButton = document.getElementById('apply-prescription-template');
+        const addHerbRowButton = document.getElementById('add-herb-row');
+        const prescriptionBody = document.getElementById('prescription-items-body');
+        const prescriptionDuplicateMessage = document.getElementById('prescription-duplicate-message');
+        const scaleContainer = document.getElementById('scale-records-container');
+        const addScaleRecordButton = document.getElementById('add-scale-record');
+        const scaleEditorRoot = document.getElementById('treatment-scale-editor');
+        const scaleOverlay = document.getElementById('treatment-scale-overlay');
+        const scaleDrawer = document.getElementById('treatment-scale-drawer');
+        const scaleCloseButton = document.getElementById('treatment-scale-close');
+        const scaleSaveButton = document.getElementById('treatment-scale-save');
+        const scaleBody = document.getElementById('treatment-scale-body');
+        const scaleTemplateBox = document.getElementById('treatment-scale-template-box');
+        const scaleTemplateSelect = document.getElementById('treatment-scale-template-select');
+        const scaleTemplateSearchInput = document.getElementById('treatment-scale-template-search');
+        const scaleTemplateOptions = document.getElementById('treatment-scale-template-options');
+        const scaleDrawerTitle = document.getElementById('treatment-scale-drawer-title');
+        const auxiliaryFilesInput = document.getElementById('id_auxiliary_exam_files');
+        const auxiliaryCustomNameInput = document.getElementById('id_auxiliary_custom_name');
+        const addAuxiliaryFileButton = document.getElementById('add-auxiliary-file');
+        const auxiliaryFileMetaField = document.getElementById('id_auxiliary_exam_file_meta_json');
+        const auxiliaryPendingList = document.getElementById('auxiliary-pending-list');
+        const tcmDiseaseField = document.getElementById('id_tcm_disease');
+        const westernDiseaseField = document.getElementById('id_western_disease');
+        const treatmentPrincipleField = document.getElementById('id_treatment_principle');
+        const pathogenesisField = document.getElementById('id_pathogenesis');
+        const symptomSyndromeField = document.getElementById('id_symptom_syndrome');
+        const termSuggestUrl = '{% url "term_suggest" %}';
+        const termExistsUrl = '{% url "term_exists" %}';
+        const termExistsCache = new Map();
+        const herbRequestMap = new WeakMap();
+
+        let prescriptionItems = [];
+        let scaleRecords = [];
+        let editingScaleIndex = null;
+        let editingScaleDraft = null;
+        const auxiliaryPendingFiles = [];
+        const templateNameMap = new Map();
+        let prescriptionTemplates = [];
+        let scaleTemplates = [];
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function syncAuxiliaryFileInput() {
+            if (!auxiliaryFilesInput || typeof DataTransfer === 'undefined') {
+                return;
+            }
+            const dataTransfer = new DataTransfer();
+            auxiliaryPendingFiles.forEach((item) => dataTransfer.items.add(item.file));
+            auxiliaryFilesInput.files = dataTransfer.files;
+        }
+
+        function syncAuxiliaryFileMeta() {
+            if (!auxiliaryFileMetaField) {
+                return;
+            }
+            const rows = auxiliaryPendingFiles.map((item) => ({ name: item.name || '', note: '' }));
+            auxiliaryFileMetaField.value = JSON.stringify(rows);
+        }
+
+        function renderAuxiliaryPendingList() {
+            if (!auxiliaryPendingList || !auxiliaryFileMetaField) {
+                return;
+            }
+            if (!auxiliaryPendingFiles.length) {
+                auxiliaryPendingList.innerHTML = '';
+                auxiliaryFileMetaField.value = '[]';
+                return;
+            }
+            auxiliaryPendingList.innerHTML = auxiliaryPendingFiles.map((item, index) => `
+                <li class="attachment-row">
+                    <span>${escapeHtml(item.name || item.file.name)}</span>
+                    <span class="attachment-meta">待保存 · ${escapeHtml(item.file.name)}</span>
+                    <button type="button" class="button button-secondary" data-remove-file-index="${index}">删除</button>
+                </li>
+            `).join('');
+            syncAuxiliaryFileInput();
+            syncAuxiliaryFileMeta();
+        }
+
+        function addSelectedAuxiliaryFiles() {
+            if (!auxiliaryFilesInput) {
+                return;
+            }
+            const selected = Array.from(auxiliaryFilesInput.files || []);
+            if (!selected.length) {
+                return;
+            }
+            const file = selected[0];
+            const customName = String(auxiliaryCustomNameInput?.value || '').trim();
+            if (!customName) {
+                window.alert('请先填写附件名称。');
+                return;
+            }
+            auxiliaryPendingFiles.push({
+                file,
+                name: customName,
+                note: '',
+            });
+            auxiliaryFilesInput.value = '';
+            if (auxiliaryCustomNameInput) {
+                auxiliaryCustomNameInput.value = '';
+            }
+            renderAuxiliaryPendingList();
+        }
+
+        function splitTagValues(rawText) {
+            const seen = new Set();
+            const values = [];
+            String(rawText || '')
+                .split(/[，,、;；\n]+/)
+                .map((item) => item.trim())
+                .filter(Boolean)
+                .forEach((item) => {
+                    const key = item.toLowerCase();
+                    if (seen.has(key)) {
+                        return;
+                    }
+                    seen.add(key);
+                    values.push(item);
+                });
+            return values;
+        }
+
+        function getTermExistsCacheKey(category, name) {
+            return `${String(category || '').toLowerCase()}:${String(name || '').trim().toLowerCase()}`;
+        }
+
+        function fetchTermExists(category, name, signal) {
+            const normalizedName = String(name || '').trim();
+            if (!normalizedName) {
+                return Promise.resolve(true);
+            }
+            const cacheKey = getTermExistsCacheKey(category, normalizedName);
+            if (termExistsCache.has(cacheKey)) {
+                return Promise.resolve(termExistsCache.get(cacheKey));
+            }
+            const url = `${termExistsUrl}?category=${encodeURIComponent(category)}&name=${encodeURIComponent(normalizedName)}`;
+            return window
+                .fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal,
+                })
+                .then((response) => (response.ok ? response.json() : { exists: false }))
+                .then((payload) => {
+                    const exists = !!payload.exists;
+                    termExistsCache.set(cacheKey, exists);
+                    return exists;
+                });
+        }
+
+        function initTermTagEditor(field, editorRootId, category) {
+            const root = document.getElementById(editorRootId);
+            if (!field || !root) {
+                return;
+            }
+            const state = {
+                tags: splitTagValues(field.value).map((name) => ({ name, known: null })),
+                suggestRows: [],
+                suggestTimer: null,
+                termCheckControllers: new Map(),
+            };
+            const editor = document.createElement('div');
+            editor.className = 'term-tag-editor';
+            editor.innerHTML = `
+                <div class="term-tag-list"></div>
+                <input type="text" class="term-tag-input" placeholder="输入后回车，支持检索">
+            `;
+            const list = editor.querySelector('.term-tag-list');
+            const input = editor.querySelector('.term-tag-input');
+            const suggest = document.createElement('div');
+            suggest.className = 'term-tag-suggest';
+            suggest.hidden = true;
+            document.body.appendChild(suggest);
+            root.innerHTML = '';
+            root.appendChild(editor);
+
+            function syncFieldValue() {
+                field.value = state.tags.map((item) => item.name).join('，');
+            }
+
+            function renderSuggest() {
+                suggest.innerHTML = '';
+                if (!state.suggestRows.length) {
+                    suggest.hidden = true;
+                    return;
+                }
+                state.suggestRows.forEach((row) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'term-suggest-option';
+                    button.dataset.name = row.name || '';
+                    button.textContent = row.alias ? `${row.name} ｜ ${row.alias}` : row.name;
+                    suggest.appendChild(button);
+                });
+                suggest.hidden = false;
+                const rect = input.getBoundingClientRect();
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                const spaceBelow = viewportHeight - rect.bottom - 10;
+                const spaceAbove = rect.top - 10;
+                const openUp = spaceBelow < 170 && spaceAbove > spaceBelow;
+                const maxHeight = Math.max(120, Math.min(220, openUp ? spaceAbove : spaceBelow));
+                suggest.style.left = `${Math.max(10, rect.left)}px`;
+                suggest.style.width = `${Math.max(220, rect.width)}px`;
+                suggest.style.maxHeight = `${Math.max(96, maxHeight)}px`;
+                suggest.style.top = openUp ? '' : `${rect.bottom + 6}px`;
+                suggest.style.bottom = openUp ? `${viewportHeight - rect.top + 6}px` : '';
+            }
+
+            function hideSuggest() {
+                suggest.hidden = true;
+                suggest.innerHTML = '';
+                state.suggestRows = [];
+            }
+
+            function renderTags() {
+                list.innerHTML = '';
+                state.tags.forEach((tag, index) => {
+                    const chip = document.createElement('span');
+                    let stateClass = 'is-pending';
+                    if (tag.known === true) {
+                        stateClass = 'is-known';
+                    } else if (tag.known === false) {
+                        stateClass = 'is-unknown';
+                    }
+                    chip.className = `term-tag-chip ${stateClass}`;
+                    chip.innerHTML = `
+                        <span>${escapeHtml(tag.name)}</span>
+                        <button type="button" aria-label="删除" data-remove-tag-index="${index}">×</button>
+                    `;
+                    list.appendChild(chip);
+                });
+                syncFieldValue();
+            }
+
+            function requestTagKnown(index) {
+                const tag = state.tags[index];
+                if (!tag) {
+                    return;
+                }
+                const cacheKey = getTermExistsCacheKey(category, tag.name);
+                if (termExistsCache.has(cacheKey)) {
+                    tag.known = termExistsCache.get(cacheKey);
+                    renderTags();
+                    return;
+                }
+                if (state.termCheckControllers.has(index)) {
+                    state.termCheckControllers.get(index).abort();
+                }
+                const controller = new AbortController();
+                state.termCheckControllers.set(index, controller);
+                fetchTermExists(category, tag.name, controller.signal)
+                    .then((exists) => {
+                        if (!state.tags[index]) {
+                            return;
+                        }
+                        state.tags[index].known = exists;
+                        renderTags();
+                    })
+                    .catch((error) => {
+                        if (error.name !== 'AbortError' && state.tags[index]) {
+                            state.tags[index].known = false;
+                            renderTags();
+                        }
+                    });
+            }
+
+            function addTag(rawName, knownState) {
+                const name = String(rawName || '').trim();
+                if (!name) {
+                    return;
+                }
+                const key = name.toLowerCase();
+                if (state.tags.some((item) => item.name.toLowerCase() === key)) {
+                    input.value = '';
+                    hideSuggest();
+                    return;
+                }
+                state.tags.push({ name, known: knownState ?? null });
+                input.value = '';
+                hideSuggest();
+                renderTags();
+                if (knownState === null || knownState === undefined) {
+                    requestTagKnown(state.tags.length - 1);
+                }
+            }
+
+            function fetchTagSuggestions(keyword) {
+                const q = String(keyword || '').trim();
+                if (!q) {
+                    hideSuggest();
+                    return;
+                }
+                const url = `${termSuggestUrl}?category=${encodeURIComponent(category)}&q=${encodeURIComponent(q)}`;
+                window
+                    .fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then((response) => (response.ok ? response.json() : { results: [] }))
+                    .then((payload) => {
+                        state.suggestRows = (payload.results || []).filter(
+                            (item) => !state.tags.some((tag) => tag.name.toLowerCase() === String(item.name || '').toLowerCase())
+                        );
+                        renderSuggest();
+                    })
+                    .catch(() => hideSuggest());
+            }
+
+            input.addEventListener('input', function () {
+                if (state.suggestTimer) {
+                    window.clearTimeout(state.suggestTimer);
+                }
+                state.suggestTimer = window.setTimeout(function () {
+                    fetchTagSuggestions(input.value);
+                }, 120);
+            });
+
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === 'Tab' || event.key === ',' || event.key === '，') {
+                    if (!input.value.trim()) {
+                        return;
+                    }
+                    event.preventDefault();
+                    addTag(input.value, null);
+                }
+                if (event.key === 'Backspace' && !input.value.trim() && state.tags.length) {
+                    state.tags.pop();
+                    renderTags();
+                }
+                if (event.key === 'Escape') {
+                    hideSuggest();
+                }
+            });
+
+            input.addEventListener('blur', function () {
+                window.setTimeout(function () {
+                    if (input.value.trim()) {
+                        addTag(input.value, null);
+                    }
+                    hideSuggest();
+                }, 120);
+            });
+
+            list.addEventListener('click', function (event) {
+                const index = Number(event.target.dataset.removeTagIndex);
+                if (Number.isNaN(index)) {
+                    return;
+                }
+                state.tags.splice(index, 1);
+                renderTags();
+            });
+
+            suggest.addEventListener('mousedown', function (event) {
+                const option = event.target.closest('.term-suggest-option');
+                if (!option) {
+                    return;
+                }
+                event.preventDefault();
+                addTag(option.dataset.name || '', true);
+                input.focus();
+            });
+
+            window.addEventListener(
+                'scroll',
+                function () {
+                    if (!suggest.hidden) {
+                        renderSuggest();
+                    }
+                },
+                true
+            );
+            window.addEventListener('resize', function () {
+                if (!suggest.hidden) {
+                    renderSuggest();
+                }
+            });
+
+            renderTags();
+            state.tags.forEach((_, index) => requestTagKnown(index));
+        }
+
+        try {
+            prescriptionItems = JSON.parse(prescriptionJsonField.value || '[]');
+        } catch (error) {
+            prescriptionItems = [];
+        }
+
+        try {
+            scaleRecords = JSON.parse(scaleJsonField.value || '[]');
+        } catch (error) {
+            scaleRecords = [];
+        }
+
+        function syncPrescriptionJson() {
+            prescriptionJsonField.value = JSON.stringify(
+                prescriptionItems.map((item) => ({
+                    herb_name: item.herb_name || '',
+                    dosage: item.dosage || '',
+                    unit: item.unit || 'g',
+                    usage: item.usage || '',
+                }))
+            );
+        }
+
+        function findDuplicatePrescriptionIndexes() {
+            const seen = new Map();
+            const duplicates = new Set();
+            prescriptionItems.forEach((item, index) => {
+                const herbName = String(item.herb_name || '').trim().toLowerCase();
+                if (!herbName) {
+                    return;
+                }
+                if (seen.has(herbName)) {
+                    duplicates.add(index);
+                    duplicates.add(seen.get(herbName));
+                    return;
+                }
+                seen.set(herbName, index);
+            });
+            return duplicates;
+        }
+
+        function normalizeHerbName(value) {
+            return String(value || '').trim();
+        }
+
+        function setHerbKnownState(input, isKnown) {
+            if (!input) {
+                return;
+            }
+            input.classList.toggle('input-term-missing', !isKnown && !!normalizeHerbName(input.value));
+            input.dataset.termKnown = isKnown ? 'true' : 'false';
+        }
+
+        function requestHerbKnownState(input) {
+            const herbName = normalizeHerbName(input?.value);
+            if (!herbName) {
+                setHerbKnownState(input, true);
+                return;
+            }
+            const keyedCache = getTermExistsCacheKey('herb', herbName);
+            if (termExistsCache.has(keyedCache)) {
+                setHerbKnownState(input, termExistsCache.get(keyedCache));
+                return;
+            }
+            if (herbRequestMap.has(input)) {
+                herbRequestMap.get(input).abort();
+            }
+            const controller = new AbortController();
+            herbRequestMap.set(input, controller);
+            fetchTermExists('herb', herbName, controller.signal)
+                .then((exists) => {
+                    termExistsCache.set(keyedCache, exists);
+                    setHerbKnownState(input, exists);
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') {
+                        setHerbKnownState(input, true);
+                    }
+                });
+        }
+
+        function scheduleHerbKnownStateCheck(input) {
+            if (!input) {
+                return;
+            }
+            if (input._termCheckTimer) {
+                window.clearTimeout(input._termCheckTimer);
+            }
+            input._termCheckTimer = window.setTimeout(function () {
+                requestHerbKnownState(input);
+            }, 160);
+        }
+
+        function renderPrescriptionDuplicateState() {
+            const duplicates = findDuplicatePrescriptionIndexes();
+            prescriptionBody.querySelectorAll('input[data-key="herb_name"]').forEach((input) => {
+                const index = Number(input.dataset.index);
+                const isDuplicate = duplicates.has(index);
+                input.classList.toggle('input-duplicate', isDuplicate);
+                input.setAttribute('aria-invalid', isDuplicate ? 'true' : 'false');
+            });
+            if (!prescriptionDuplicateMessage) {
+                return;
+            }
+            if (!duplicates.size) {
+                prescriptionDuplicateMessage.hidden = true;
+                prescriptionDuplicateMessage.textContent = '';
+                return;
+            }
+            prescriptionDuplicateMessage.hidden = false;
+            prescriptionDuplicateMessage.textContent = '饮片名称不能重复，请修改后再保存。';
+        }
+
+        function renderPrescriptionRequiredState() {
+            prescriptionBody.querySelectorAll('input[data-key="dosage"], input[data-key="unit"]').forEach((input) => {
+                const value = String(input.value || '').trim();
+                input.classList.toggle('input-required-missing', !value);
+            });
+        }
+
+        function syncScaleJson() {
+            scaleJsonField.value = JSON.stringify(scaleRecords);
+        }
+
+        function renderScaleAnswerControl(item, answer, scaleIndex, itemIndex, inDrawer) {
+            const value = answer.value ?? answer.score ?? '';
+            const scopeAttrs = inDrawer ? 'data-drawer-answer="true"' : '';
+            const commonAttrs = `data-scale-index="${scaleIndex}" data-answer-index="${itemIndex}" data-answer-key="value" ${scopeAttrs}`;
+            const missingClass = isAnswerFilled(item, answer) ? '' : 'scale-missing-input';
+            if (item.field_type === 'score' || item.field_type === 'number') {
+                return `
+                    <input type="number" class="${missingClass}" min="${item.score_min}" max="${item.score_max}" value="${escapeHtml(value)}" ${commonAttrs}>
+                    ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+                `;
+            }
+            if (item.field_type === 'textarea') {
+                return `
+                    <textarea rows="2" class="${missingClass}" ${commonAttrs}>${escapeHtml(value || '')}</textarea>
+                    ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+                `;
+            }
+            if (item.field_type === 'select') {
+                const optionsHtml = ['<option value="">请选择</option>'].concat(
+                    (item.options || []).map((option) => `<option value="${escapeHtml(option)}" ${option === value ? 'selected' : ''}>${escapeHtml(option)}</option>`)
+                ).join('');
+                return `
+                    <select class="${missingClass}" ${commonAttrs}>${optionsHtml}</select>
+                    ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+                `;
+            }
+            return `
+                <input type="text" class="${missingClass}" value="${escapeHtml(value || '')}" ${commonAttrs}>
+                ${item.help_text ? `<small class="helptext">${escapeHtml(item.help_text)}</small>` : ''}
+            `;
+        }
+
+        function updateScaleInputMissingState(element) {
+            if (!element || !('value' in element)) {
+                return;
+            }
+            const value = String(element.value || '').trim();
+            element.classList.toggle('scale-missing-input', !value);
+        }
+
+        function isAnswerFilled(item, answer) {
+            if (!item || item.field_type === 'group') {
+                return true;
+            }
+            const value = answer ? (answer.value ?? answer.score ?? '') : '';
+            return String(value ?? '').trim() !== '';
+        }
+
+        function countScaleAnswerableItems(template) {
+            return (template?.items || []).filter((item) => item.field_type !== 'group').length;
+        }
+
+        function findAnswerIndexByKey(record, itemKey) {
+            return (record.answers || []).findIndex((item) => item && item.key === itemKey);
+        }
+
+        function countFilledAnswers(record) {
+            return (record.answers || []).filter((item) => {
+                const row = item || {};
+                const fakeField = { field_type: row.field_type || 'text' };
+                return isAnswerFilled(fakeField, row);
+            }).length;
+        }
+
+        function calculateDraftTotal(record, template) {
+            let total = 0;
+            let hasScore = false;
+            (template.items || []).forEach((item) => {
+                if (item.field_type !== 'score') {
+                    return;
+                }
+                const answerIndex = findAnswerIndexByKey(record, item.key);
+                const answer = answerIndex >= 0 ? (record.answers || [])[answerIndex] : {};
+                const value = answer.value ?? answer.score ?? '';
+                if (value === '' || value === null || value === undefined) {
+                    return;
+                }
+                const numericValue = Number(value);
+                if (!Number.isNaN(numericValue)) {
+                    total += numericValue;
+                    hasScore = true;
+                }
+            });
+            return hasScore ? total : null;
+        }
+
+        function clearScaleValidationState() {
+            scaleBody?.querySelectorAll('.scale-invalid-input').forEach((node) => {
+                node.classList.remove('scale-invalid-input');
+            });
+        }
+
+        function validateScaleDraftBeforeSave(template) {
+            clearScaleValidationState();
+            if (!editingScaleDraft || !template) {
+                return { ok: true };
+            }
+            const itemMap = new Map((template.items || []).map((item) => [item.key, item]));
+            for (let answerIndex = 0; answerIndex < (editingScaleDraft.answers || []).length; answerIndex += 1) {
+                const answer = (editingScaleDraft.answers || [])[answerIndex];
+                const templateItem = itemMap.get(answer.key);
+                if (!templateItem) {
+                    continue;
+                }
+                if (!['score', 'number'].includes(templateItem.field_type)) {
+                    continue;
+                }
+                const raw = String(answer.value ?? '').trim();
+                if (!raw) {
+                    continue;
+                }
+                if (!/^-?\d+$/.test(raw)) {
+                    return {
+                        ok: false,
+                        answerIndex,
+                        key: answer.key,
+                        label: templateItem.label || answer.label || '数值题',
+                        message: `“${templateItem.label || answer.label}”只能填写整数。`,
+                    };
+                }
+                const numericValue = Number(raw);
+                const min = Number(templateItem.score_min);
+                const max = Number(templateItem.score_max);
+                if (!Number.isNaN(min) && numericValue < min) {
+                    return {
+                        ok: false,
+                        answerIndex,
+                        key: answer.key,
+                        label: templateItem.label || answer.label || '数值题',
+                        message: `“${templateItem.label || answer.label}”必须在 ${min}~${max} 范围内。`,
+                    };
+                }
+                if (!Number.isNaN(max) && numericValue > max) {
+                    return {
+                        ok: false,
+                        answerIndex,
+                        key: answer.key,
+                        label: templateItem.label || answer.label || '数值题',
+                        message: `“${templateItem.label || answer.label}”必须在 ${min}~${max} 范围内。`,
+                    };
+                }
+            }
+            return { ok: true };
+        }
+
+        function buildSectionRows(section) {
+            const items = section.items || [];
+            const childrenMap = new Map();
+            items.forEach((item) => {
+                if (item.parent_key) {
+                    if (!childrenMap.has(item.parent_key)) {
+                        childrenMap.set(item.parent_key, []);
+                    }
+                    childrenMap.get(item.parent_key).push(item);
+                }
+            });
+            return items
+                .filter((item) => !item.parent_key || !items.some((candidate) => candidate.key === item.parent_key))
+                .map((item) => ({ item, children: childrenMap.get(item.key) || [] }));
+        }
+
+        function refreshPrescriptionTemplateOptions() {
+            if (templateSelect) {
+                templateSelect.innerHTML = [
+                    '<option value=""></option>',
+                    ...prescriptionTemplates.map(
+                        (item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`
+                    ),
+                ].join('');
+            }
+            if (templateOptions) {
+                templateOptions.innerHTML = prescriptionTemplates.map(
+                    (item) => `<option value="${escapeHtml(item.name)}"></option>`
+                ).join('');
+            }
+            templateNameMap.clear();
+            prescriptionTemplates.forEach((item) => {
+                const key = String(item.name || '').trim().toLowerCase();
+                if (!key) {
+                    return;
+                }
+                templateNameMap.set(key, String(item.id));
+            });
+        }
+
+        function refreshTemplateOptions() {
+            if (!scaleTemplateSelect) {
+                return;
+            }
+            scaleTemplateSelect.innerHTML = ['<option value=""></option>'].concat(
+                scaleTemplates.map((item) => (
+                    `<option value="${item.id}">${escapeHtml(item.name)}</option>`
+                ))
+            ).join('');
+            if (scaleTemplateOptions) {
+                scaleTemplateOptions.innerHTML = scaleTemplates.map((item) => (
+                    `<option value="${escapeHtml(item.name)}"></option>`
+                )).join('');
+            }
+        }
+
+        function syncScaleTemplateSearchFromSelect() {
+            if (!scaleTemplateSearchInput || !scaleTemplateSelect) {
+                return;
+            }
+            const selected = scaleTemplates.find((item) => String(item.id) === String(scaleTemplateSelect.value));
+            scaleTemplateSearchInput.value = selected ? selected.name : '';
+        }
+
+        function syncScaleTemplateSelectFromSearch() {
+            if (!scaleTemplateSearchInput || !scaleTemplateSelect) {
+                return false;
+            }
+            const keyword = String(scaleTemplateSearchInput.value || '').trim().toLowerCase();
+            if (!keyword) {
+                return false;
+            }
+            let target = scaleTemplates.find((item) => String(item.name || '').trim().toLowerCase() === keyword);
+            if (!target) {
+                target = scaleTemplates.find((item) => String(item.name || '').toLowerCase().includes(keyword));
+            }
+            if (!target) {
+                return false;
+            }
+            scaleTemplateSelect.value = String(target.id);
+            scaleTemplateSearchInput.value = target.name;
+            return true;
+        }
+
+        function loadTemplatePayloads() {
+            const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+            return Promise.all([
+                window.fetch(prescriptionTemplateApiUrl, { headers, credentials: 'same-origin' }),
+                window.fetch(scaleTemplateApiUrl, { headers, credentials: 'same-origin' }),
+            ])
+                .then((responses) => Promise.all(responses.map((response) => (
+                    response.ok ? response.json() : Promise.resolve({ results: [] })
+                ))))
+                .then(([prescriptionPayload, scalePayload]) => {
+                    prescriptionTemplates = Array.isArray(prescriptionPayload.results)
+                        ? prescriptionPayload.results
+                        : [];
+                    scaleTemplates = Array.isArray(scalePayload.results) ? scalePayload.results : [];
+                    refreshPrescriptionTemplateOptions();
+                    refreshTemplateOptions();
+                })
+                .catch(() => {
+                    prescriptionTemplates = [];
+                    scaleTemplates = [];
+                    refreshPrescriptionTemplateOptions();
+                    refreshTemplateOptions();
+                });
+        }
+
+        function applyScaleTemplateSearchSelection() {
+            if (editingScaleIndex !== null) {
+                return;
+            }
+            if (!syncScaleTemplateSelectFromSearch()) {
+                return;
+            }
+            const template = scaleTemplates.find((item) => String(item.id) === scaleTemplateSelect.value);
+            if (!template) {
+                return;
+            }
+            editingScaleDraft = {
+                template_id: template.id,
+                template_name: template.name,
+                notes: '',
+                answers: template.items
+                    .filter((item) => item.field_type !== 'group')
+                    .map((item) => ({
+                    key: item.key,
+                    label: item.label,
+                    field_type: item.field_type,
+                    group_key: item.group_key,
+                    parent_key: item.parent_key,
+                    value: '',
+                    note: '',
+                })),
+            };
+            renderScaleDrawerBody();
+        }
+
+        function openScaleDrawer(record, index) {
+            if (!scaleTemplates.length || !scaleEditorRoot) {
+                window.alert('请先在管理员系统中创建量表模板。');
+                return;
+            }
+            editingScaleIndex = index;
+            editingScaleDraft = JSON.parse(JSON.stringify(record));
+            scaleEditorRoot.classList.add('is-open');
+            scaleDrawer.setAttribute('aria-hidden', 'false');
+            scaleOverlay.hidden = false;
+            scaleDrawerTitle.textContent = index === null ? '新增量表' : '编辑量表';
+            refreshTemplateOptions();
+            scaleTemplateSelect.value = String(editingScaleDraft.template_id);
+            syncScaleTemplateSearchFromSelect();
+            scaleTemplateBox.hidden = index !== null;
+            renderScaleDrawerBody();
+        }
+
+        function closeScaleDrawer() {
+            if (!scaleEditorRoot) {
+                return;
+            }
+            scaleEditorRoot.classList.remove('is-open');
+            scaleDrawer.setAttribute('aria-hidden', 'true');
+            scaleOverlay.hidden = true;
+            editingScaleIndex = null;
+            editingScaleDraft = null;
+        }
+
+        function renderScaleDrawerBody() {
+            if (!editingScaleDraft) {
+                scaleBody.innerHTML = '';
+                return;
+            }
+            if (!editingScaleDraft.template_id) {
+                scaleBody.innerHTML = '<p class="term-alias">请先选择量表模板，选择后会显示题目。</p>';
+                return;
+            }
+            const template = scaleTemplates.find((item) => item.id === Number(editingScaleDraft.template_id));
+            if (!template) {
+                scaleBody.innerHTML = '<p class="term-alias">未找到量表模板。</p>';
+                return;
+            }
+            let itemsHtml = '';
+            (template.sections || []).forEach((section) => {
+                const sectionRows = buildSectionRows(section).map(({ item, children }) => {
+                    const answerIndex = findAnswerIndexByKey(editingScaleDraft, item.key);
+                    const answer = answerIndex >= 0 ? editingScaleDraft.answers[answerIndex] : {};
+                    const childHtml = children.map((child) => {
+                        const childAnswerIndex = findAnswerIndexByKey(editingScaleDraft, child.key);
+                        const childAnswer = childAnswerIndex >= 0 ? editingScaleDraft.answers[childAnswerIndex] : {};
+                        return `
+                            <div class="scale-drawer-child">
+                                <div class="scale-drawer-question-head">
+                                    <strong>${escapeHtml(child.label)}</strong>
+                                    <span>${escapeHtml(child.field_type === 'score' ? `${child.score_min} - ${child.score_max} 分` : child.field_type)}</span>
+                                </div>
+                                <div class="field-box">
+                                    ${renderScaleAnswerControl(child, childAnswer, editingScaleIndex ?? 0, childAnswerIndex, true)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    return `
+                        <section class="scale-drawer-question">
+                            <div class="scale-drawer-question-head">
+                                <strong>${escapeHtml(item.label)}</strong>
+                                <span>${escapeHtml(item.field_type === 'score' ? `${item.score_min} - ${item.score_max} 分` : item.field_type)}</span>
+                            </div>
+                            <div class="field-box">
+                                ${renderScaleAnswerControl(item, answer, editingScaleIndex ?? 0, answerIndex, true)}
+                            </div>
+                            ${childHtml ? `<div class="scale-drawer-children">${childHtml}</div>` : ''}
+                        </section>
+                    `;
+                }).join('');
+                itemsHtml += `
+                    <section class="scale-drawer-section">
+                        <div class="scale-drawer-section-head">
+                            <strong>${escapeHtml(section.title)}</strong>
+                            ${section.description ? `<span>${escapeHtml(section.description)}</span>` : ''}
+                        </div>
+                        <div class="scale-drawer-section-body">
+                            ${sectionRows}
+                        </div>
+                    </section>
+                `;
+            });
+            scaleBody.innerHTML = `
+                <div class="scale-drawer-summary">
+                    <strong>${escapeHtml(template.name)}</strong>
+                    <span>${escapeHtml(template.description || '无说明')}</span>
+                </div>
+                ${itemsHtml}
+                <div class="field-box">
+                    <label>量表备注</label>
+                    <textarea rows="3" data-scale-key="notes">${escapeHtml(editingScaleDraft.notes || '')}</textarea>
+                </div>
+            `;
+        }
+
+        function renderPrescriptionRows() {
+            prescriptionBody.innerHTML = '';
+            prescriptionItems.forEach((item, index) => {
+                const card = document.createElement('section');
+                card.className = 'prescription-pair-item';
+                card.innerHTML = `
+                    <div class="prescription-pair-line">
+                        <span class="prescription-order-cell">${index + 1}</span>
+                        <input type="text" class="prescription-row-input prescription-head-herb" placeholder="饮片名称" value="${escapeHtml(item.herb_name || '')}" data-key="herb_name" data-index="${index}" data-term-autocomplete="true" data-term-category="herb">
+                        <input type="text" class="prescription-row-input" placeholder="剂量" value="${escapeHtml(item.dosage || '')}" data-key="dosage" data-index="${index}">
+                        <input type="text" class="prescription-row-input" placeholder="单位" value="${escapeHtml(item.unit || 'g')}" data-key="unit" data-index="${index}">
+                        <input type="text" class="prescription-row-input" placeholder="脚注" value="${escapeHtml(item.usage || '')}" data-key="usage" data-index="${index}">
+                        <button type="button" class="button button-secondary button-small" data-remove-index="${index}">删除</button>
+                    </div>
+                `;
+                prescriptionBody.appendChild(card);
+            });
+            prescriptionBody.querySelectorAll('input[data-key="herb_name"]').forEach((input) => {
+                scheduleHerbKnownStateCheck(input);
+            });
+            syncPrescriptionJson();
+            renderPrescriptionDuplicateState();
+            renderPrescriptionRequiredState();
+        }
+
+        function addPrescriptionRow(item) {
+            prescriptionItems.push(item || { herb_name: '', dosage: '', unit: 'g', usage: '' });
+            renderPrescriptionRows();
+        }
+
+        function syncTemplateSelectFromSearch() {
+            if (!templateSearchInput || !templateSelect) {
+                return;
+            }
+            const keyword = String(templateSearchInput.value || '').trim().toLowerCase();
+            if (!keyword) {
+                templateSelect.value = '';
+                return;
+            }
+            templateSelect.value = templateNameMap.get(keyword) || '';
+        }
+
+        function syncTemplateSearchFromSelect() {
+            if (!templateSearchInput || !templateSelect) {
+                return;
+            }
+            const selectedId = String(templateSelect.value || '');
+            if (!selectedId) {
+                templateSearchInput.value = '';
+                return;
+            }
+            const template = prescriptionTemplates.find((item) => String(item.id) === selectedId);
+            templateSearchInput.value = template ? template.name : '';
+        }
+
+        function renderScaleRecords() {
+            scaleContainer.innerHTML = '';
+            scaleRecords.forEach((record, index) => {
+                const template = scaleTemplates.find((item) => item.id === Number(record.template_id));
+                if (!template) {
+                    return;
+                }
+                const filledCount = countFilledAnswers(record);
+                const answerableCount = countScaleAnswerableItems(template);
+                const isIncomplete = filledCount < answerableCount;
+                const wrapper = document.createElement('section');
+                wrapper.className = `scale-record-card ${isIncomplete ? 'is-incomplete' : ''}`;
+                wrapper.innerHTML = `
+                    <div class="scale-record-head">
+                        <div class="scale-record-main">
+                            <h3>${escapeHtml(template.name)}</h3>
+                            <p>${escapeHtml(template.description || '无说明')}</p>
+                        </div>
+                        <div class="scale-record-side">
+                            <span class="scale-count-chip ${isIncomplete ? 'is-incomplete' : ''}">${filledCount}/${answerableCount} 项</span>
+                        </div>
+                    </div>
+                    <div class="scale-record-actions">
+                        <button type="button" class="button button-secondary button-small" data-edit-scale="${index}">编辑量表</button>
+                        <button type="button" class="button button-secondary button-small" data-remove-scale="${index}">删除量表</button>
+                    </div>
+                `;
+                scaleContainer.appendChild(wrapper);
+            });
+            syncScaleJson();
+        }
+
+        function addScaleRecord() {
+            openScaleDrawer({
+                template_id: '',
+                template_name: '',
+                notes: '',
+                answers: [],
+            }, null);
+        }
+
+        prescriptionBody?.addEventListener('input', function (event) {
+            const index = Number(event.target.dataset.index);
+            const key = event.target.dataset.key;
+            if (Number.isNaN(index) || !key || !prescriptionItems[index]) {
+                return;
+            }
+            prescriptionItems[index][key] = event.target.value;
+            syncPrescriptionJson();
+            if (key === 'herb_name') {
+                scheduleHerbKnownStateCheck(event.target);
+                renderPrescriptionDuplicateState();
+            }
+            if (key === 'dosage' || key === 'unit') {
+                renderPrescriptionRequiredState();
+            }
+        });
+
+        prescriptionBody?.addEventListener('focusout', function (event) {
+            if (event.target.matches('input[data-key="herb_name"]')) {
+                requestHerbKnownState(event.target);
+            }
+        });
+
+        prescriptionBody?.addEventListener('click', function (event) {
+            const index = event.target.dataset.removeIndex;
+            if (index === undefined) {
+                return;
+            }
+            prescriptionItems.splice(Number(index), 1);
+            renderPrescriptionRows();
+        });
+
+        scaleContainer?.addEventListener('click', function (event) {
+            const editIndex = event.target.dataset.editScale;
+            if (editIndex !== undefined) {
+                openScaleDrawer(scaleRecords[Number(editIndex)], Number(editIndex));
+                return;
+            }
+            const index = event.target.dataset.removeScale;
+            if (index === undefined) {
+                return;
+            }
+            scaleRecords.splice(Number(index), 1);
+            renderScaleRecords();
+        });
+
+        scaleBody?.addEventListener('input', function (event) {
+            if (!editingScaleDraft) {
+                return;
+            }
+            if (event.target.classList.contains('scale-invalid-input')) {
+                event.target.classList.remove('scale-invalid-input');
+            }
+            if (event.target.dataset.scaleKey === 'notes') {
+                editingScaleDraft.notes = event.target.value;
+                return;
+            }
+            const answerIndex = Number(event.target.dataset.answerIndex);
+            const answerKey = event.target.dataset.answerKey;
+            if (Number.isNaN(answerIndex) || !answerKey || !editingScaleDraft.answers[answerIndex]) {
+                return;
+            }
+            editingScaleDraft.answers[answerIndex][answerKey] = event.target.value;
+            updateScaleInputMissingState(event.target);
+        });
+
+        scaleTemplateSelect?.addEventListener('change', function () {
+            if (editingScaleIndex !== null) {
+                return;
+            }
+            syncScaleTemplateSearchFromSelect();
+            const template = scaleTemplates.find((item) => String(item.id) === scaleTemplateSelect.value);
+            if (!template) {
+                return;
+            }
+            editingScaleDraft = {
+                template_id: template.id,
+                template_name: template.name,
+                notes: '',
+                answers: template.items
+                    .filter((item) => item.field_type !== 'group')
+                    .map((item) => ({
+                    key: item.key,
+                    label: item.label,
+                    field_type: item.field_type,
+                    group_key: item.group_key,
+                    parent_key: item.parent_key,
+                    value: '',
+                    note: '',
+                })),
+            };
+            renderScaleDrawerBody();
+        });
+
+        scaleTemplateSearchInput?.addEventListener('change', applyScaleTemplateSearchSelection);
+        scaleTemplateSearchInput?.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter') {
+                return;
+            }
+            event.preventDefault();
+            applyScaleTemplateSearchSelection();
+        });
+
+        scaleSaveButton?.addEventListener('click', function () {
+            if (!editingScaleDraft) {
+                return;
+            }
+            const template = scaleTemplates.find((item) => item.id === Number(editingScaleDraft.template_id));
+            if (!template) {
+                window.alert('请先选择量表模板。');
+                return;
+            }
+            const validation = validateScaleDraftBeforeSave(template);
+            if (!validation.ok) {
+                const invalidInput = scaleBody?.querySelector(`[data-answer-index="${validation.answerIndex}"][data-answer-key="value"]`);
+                if (invalidInput) {
+                    invalidInput.classList.add('scale-invalid-input');
+                    invalidInput.focus();
+                }
+                window.alert(validation.message || '量表数值填写不正确，请检查后再保存。');
+                return;
+            }
+            editingScaleDraft.template_name = template.name;
+            if (editingScaleIndex === null) {
+                scaleRecords.push(JSON.parse(JSON.stringify(editingScaleDraft)));
+            } else {
+                scaleRecords[editingScaleIndex] = JSON.parse(JSON.stringify(editingScaleDraft));
+            }
+            renderScaleRecords();
+            closeScaleDrawer();
+        });
+
+        scaleCloseButton?.addEventListener('click', closeScaleDrawer);
+        scaleOverlay?.addEventListener('click', closeScaleDrawer);
+
+        applyTemplateButton?.addEventListener('click', function () {
+            syncTemplateSelectFromSearch();
+            const template = prescriptionTemplates.find((item) => String(item.id) === templateSelect.value);
+            if (!template) {
+                return;
+            }
+            prescriptionItems = template.items.map((item) => ({ ...item }));
+            if (!usageField.value) {
+                usageField.value = template.usage_method || '';
+            }
+            renderPrescriptionRows();
+        });
+
+        templateSearchInput?.addEventListener('input', function () {
+            syncTemplateSelectFromSearch();
+        });
+
+        templateSelect?.addEventListener('change', function () {
+            syncTemplateSearchFromSelect();
+        });
+
+        addHerbRowButton?.addEventListener('click', function () {
+            addPrescriptionRow();
+        });
+
+        addScaleRecordButton?.addEventListener('click', function () {
+            addScaleRecord();
+        });
+        addAuxiliaryFileButton?.addEventListener('click', addSelectedAuxiliaryFiles);
+        auxiliaryPendingList?.addEventListener('click', function (event) {
+            const removeIndex = Number(event.target.dataset.removeFileIndex);
+            if (Number.isNaN(removeIndex)) {
+                return;
+            }
+            auxiliaryPendingFiles.splice(removeIndex, 1);
+            renderAuxiliaryPendingList();
+        });
+        auxiliaryFilesInput?.closest('form')?.addEventListener('submit', function () {
+            syncAuxiliaryFileInput();
+            syncAuxiliaryFileMeta();
+        });
+        document.querySelectorAll('.attachment-delete-btn').forEach((button) => {
+            button.addEventListener('click', function () {
+                const url = button.dataset.deleteUrl || '';
+                if (!url) {
+                    return;
+                }
+                const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+                window.fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                })
+                    .then((response) => response.json().catch(() => ({ ok: false })))
+                    .then((payload) => {
+                        if (!payload.ok) {
+                            window.alert(payload.error || '删除附件失败，请刷新后重试。');
+                            return;
+                        }
+                        button.closest('li')?.remove();
+                    })
+                    .catch(() => {
+                        window.alert('删除附件失败，请刷新后重试。');
+                    });
+            });
+        });
+
+        if (!prescriptionItems.length) {
+            addPrescriptionRow();
+        } else {
+            renderPrescriptionRows();
+        }
+        applyTemplateButton?.setAttribute('disabled', 'disabled');
+        addScaleRecordButton?.setAttribute('disabled', 'disabled');
+        initTermTagEditor(tcmDiseaseField, 'tcm-disease-editor', 'tcm_disease');
+        initTermTagEditor(westernDiseaseField, 'western-disease-editor', 'western_disease');
+        initTermTagEditor(treatmentPrincipleField, 'treatment-principle-editor', 'treatment_principle');
+        initTermTagEditor(pathogenesisField, 'pathogenesis-editor', 'pathogenesis');
+        initTermTagEditor(symptomSyndromeField, 'symptom-syndrome-editor', 'symptom');
+        syncTemplateSearchFromSelect();
+        syncScaleJson();
+        renderAuxiliaryPendingList();
+        loadTemplatePayloads().finally(function () {
+            syncTemplateSearchFromSelect();
+            renderScaleRecords();
+            applyTemplateButton?.removeAttribute('disabled');
+            addScaleRecordButton?.removeAttribute('disabled');
+        });
+    }());
+</script>

@@ -1,0 +1,292 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name|default:"临床科研智能随访助手" }}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20260416a">
+    <link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="wrap">
+            <a class="brand" href="{% if request.user.is_authenticated %}{% url 'patient_list' %}{% else %}{% url 'login' %}{% endif %}">
+                {{ app_name|default:"临床科研智能随访助手" }}
+            </a>
+            {% if request.user.is_authenticated %}
+                <div class="header-actions">
+                    <nav class="nav">
+                        <a href="{% url 'patient_list' %}">患者列表</a>
+                        <a href="{% url 'patient_create' %}">新建患者</a>
+                        {% if can_manage_project_module %}
+                            <a href="{% url 'project_list' %}">项目管理</a>
+                        {% endif %}
+                        {% if can_manage_reference_data %}
+                            <a href="{% url 'template_manage' %}">模版管理</a>
+                        {% endif %}
+                        {% if can_manage_accounts %}
+                            <a href="{% url 'account_list' %}">账号管理</a>
+                        {% endif %}
+                    </nav>
+                    <form method="post" action="{% url 'logout' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-secondary button-small">退出</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="wrap content">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-content">
+            <div class="footer-brand">
+                <strong>{{ app_name|default:"临床科研智能随访助手" }}</strong>
+                {% if request.user.is_authenticated %}
+                    <div class="footer-user">
+                        <span>{{ request.user.first_name|default:request.user.username }} ｜ {{ current_user_role|default:"-" }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="footer-meta">
+                <span>版权所有 © 北京中医药大学</span>
+                <span>联系邮箱：zjingqi@bucm.edu.cn</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function formatDateObject(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function parseDateValue(value) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return null;
+            }
+            const [year, month, day] = value.split('-').map(Number);
+            const parsed = new Date(year, month - 1, day);
+            if (
+                parsed.getFullYear() !== year ||
+                parsed.getMonth() !== month - 1 ||
+                parsed.getDate() !== day
+            ) {
+                return null;
+            }
+            return parsed;
+        }
+
+        window.followupDateUtils = {
+            formatDateObject,
+            parseDateValue,
+        };
+    </script>
+    <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}"></script>
+    <script src="{% static 'vendor/flatpickr/l10n/zh.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.flatpickr) {
+                return;
+            }
+
+            document.querySelectorAll('input.js-date-input[data-flatpickr="date"]').forEach(function (input) {
+                if (input._flatpickr) {
+                    return;
+                }
+                window.flatpickr(input, {
+                    dateFormat: 'Y-m-d',
+                    locale: window.flatpickr.l10ns.zh || 'zh',
+                    allowInput: true,
+                    disableMobile: true,
+                    monthSelectorType: 'dropdown',
+                    nextArrow: '›',
+                    prevArrow: '‹',
+                });
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const requestMap = new WeakMap();
+            let debounceTimer = null;
+            let dropdownCounter = 0;
+
+            function ensureInputId(input) {
+                if (!input.id) {
+                    dropdownCounter += 1;
+                    input.id = `term-input-${dropdownCounter}`;
+                }
+                return input.id;
+            }
+
+            function positionDropdown(input) {
+                if (!input?._termDropdown || input._termDropdown.hidden) {
+                    return;
+                }
+                const dropdown = input._termDropdown;
+                const rect = input.getBoundingClientRect();
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                const spaceBelow = viewportHeight - rect.bottom - 10;
+                const spaceAbove = rect.top - 10;
+                const openUp = spaceBelow < 170 && spaceAbove > spaceBelow;
+                const maxHeight = Math.max(120, Math.min(220, openUp ? spaceAbove : spaceBelow));
+
+                dropdown.style.left = `${Math.max(10, rect.left)}px`;
+                dropdown.style.width = `${Math.max(180, rect.width)}px`;
+                dropdown.style.maxHeight = `${Math.max(96, maxHeight)}px`;
+                dropdown.style.top = openUp ? '' : `${rect.bottom + 6}px`;
+                dropdown.style.bottom = openUp ? `${viewportHeight - rect.top + 6}px` : '';
+                dropdown.dataset.openUp = openUp ? 'true' : 'false';
+            }
+
+            function ensureDropdown(input) {
+                if (input._termDropdown) {
+                    return input._termDropdown;
+                }
+                const dropdown = document.createElement('div');
+                dropdown.className = 'term-suggest-dropdown';
+                dropdown.hidden = true;
+                dropdown.dataset.inputId = ensureInputId(input);
+                document.body.appendChild(dropdown);
+                input._termDropdown = dropdown;
+                return dropdown;
+            }
+
+            function hideDropdown(input) {
+                if (!input || !input._termDropdown) {
+                    return;
+                }
+                input._termDropdown.hidden = true;
+                input._termDropdown.innerHTML = '';
+            }
+
+            function showDropdown(input, items) {
+                const dropdown = ensureDropdown(input);
+                dropdown.innerHTML = '';
+                if (!items.length) {
+                    dropdown.hidden = true;
+                    return;
+                }
+                items.forEach(function (item) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'term-suggest-option';
+                    button.dataset.value = item.name;
+                    button.textContent = item.alias ? `${item.name} ｜ ${item.alias}` : item.name;
+                    dropdown.appendChild(button);
+                });
+                dropdown.hidden = false;
+                positionDropdown(input);
+            }
+
+            function fetchSuggestions(input) {
+                const category = input.dataset.termCategory;
+                const keyword = (input.value || '').trim();
+                if (!category || !keyword) {
+                    hideDropdown(input);
+                    return;
+                }
+
+                if (requestMap.has(input)) {
+                    requestMap.get(input).abort();
+                }
+
+                const controller = new AbortController();
+                requestMap.set(input, controller);
+                const url = `{% url 'term_suggest' %}?category=${encodeURIComponent(category)}&q=${encodeURIComponent(keyword)}`;
+
+                window.fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: controller.signal,
+                })
+                    .then(function (response) {
+                        return response.ok ? response.json() : { results: [] };
+                    })
+                    .then(function (payload) {
+                        showDropdown(input, payload.results || []);
+                    })
+                    .catch(function (error) {
+                        if (error.name !== 'AbortError') {
+                            hideDropdown(input);
+                        }
+                    });
+            }
+
+            document.addEventListener('input', function (event) {
+                const input = event.target.closest('[data-term-autocomplete="true"]');
+                if (!input) {
+                    return;
+                }
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(function () {
+                    fetchSuggestions(input);
+                }, 120);
+            });
+
+            document.addEventListener('focusin', function (event) {
+                const input = event.target.closest('[data-term-autocomplete="true"]');
+                if (input && input.value.trim()) {
+                    fetchSuggestions(input);
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                const option = event.target.closest('.term-suggest-option');
+                if (option) {
+                    const dropdown = option.closest('.term-suggest-dropdown');
+                    const inputId = dropdown ? dropdown.dataset.inputId : null;
+                    const input = inputId ? document.getElementById(inputId) : null;
+                    if (input) {
+                        input.value = option.dataset.value || option.textContent;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        hideDropdown(input);
+                        input.focus();
+                    }
+                    return;
+                }
+
+                if (!event.target.closest('.term-suggest-dropdown') && !event.target.closest('[data-term-autocomplete="true"]')) {
+                    document.querySelectorAll('[data-term-autocomplete="true"]').forEach(function (input) {
+                        hideDropdown(input);
+                    });
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    document.querySelectorAll('[data-term-autocomplete="true"]').forEach(function (input) {
+                        hideDropdown(input);
+                    });
+                }
+            });
+
+            window.addEventListener('resize', function () {
+                document.querySelectorAll('[data-term-autocomplete="true"]').forEach(positionDropdown);
+            });
+
+            window.addEventListener(
+                'scroll',
+                function () {
+                    document.querySelectorAll('[data-term-autocomplete="true"]').forEach(positionDropdown);
+                },
+                true
+            );
+        });
+    </script>
+</body>
+</html>

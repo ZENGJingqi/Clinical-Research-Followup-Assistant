@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local environment files
+.env.local
+
+# Django / local runtime data
+data/
+db.sqlite3
+*.sqlite3
+media/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Temporary workspace artifacts
+_github_readme_work/
+
+# Local packaging and copyright materials
+临床科研智能随访助手_用户安装版_*.zip
+*.pdf
+*.docx
+同门意见-0408.txt

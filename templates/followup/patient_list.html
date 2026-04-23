@@ -1,0 +1,279 @@
+﻿{% extends "base.html" %}
+
+{% block title %}患者列表{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <h1>患者列表</h1>
+    </div>
+    <a class="button" href="{% url 'patient_create' %}">新建患者</a>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card stat-card-wide">
+        <p class="stat-label">总体概况</p>
+        <div class="stat-inline">
+            <div><span>患者人数</span><strong>{{ stats.patient_count }}</strong></div>
+            <div><span>诊疗次数</span><strong>{{ stats.treatment_count }}</strong></div>
+            <div><span>随访次数</span><strong>{{ stats.followup_count }}</strong></div>
+        </div>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">今日需回访</p>
+        <div class="stat-value-line">
+            <strong class="stat-value">{{ stats.today_due }}</strong>
+            <span class="stat-suffix">人</span>
+        </div>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">近一周内需回访</p>
+        <div class="stat-value-line">
+            <strong class="stat-value">{{ stats.week_due }}</strong>
+            <span class="stat-suffix">人</span>
+        </div>
+    </article>
+</section>
+
+<section class="panel filter-panel">
+    <form method="get" class="filter-form">
+        <div class="filter-grid">
+            <div>
+                <label for="{{ filter_form.q.id_for_label }}">关键词</label>
+                {{ filter_form.q }}
+            </div>
+            <div>
+                <label for="{{ filter_form.tcm_disease.id_for_label }}">中医疾病</label>
+                {{ filter_form.tcm_disease }}
+            </div>
+            <div>
+                <label for="{{ filter_form.status.id_for_label }}">状态</label>
+                {{ filter_form.status }}
+            </div>
+            <div>
+                <label for="{{ filter_form.start_date_from.id_for_label }}">开始时间从</label>
+                {{ filter_form.start_date_from }}
+            </div>
+            <div>
+                <label for="{{ filter_form.start_date_to.id_for_label }}">开始时间到</label>
+                {{ filter_form.start_date_to }}
+            </div>
+        </div>
+        <div class="toolbar">
+            <div class="segmented">
+                <a class="{% if view_mode == 'card' %}active{% endif %}" href="?{{ toggle_card_query }}">卡片视图</a>
+                <a class="{% if view_mode == 'table' %}active{% endif %}" href="?{{ toggle_table_query }}">列表视图</a>
+            </div>
+            <div class="toolbar-actions">
+                <input type="hidden" name="view" value="{{ view_mode }}">
+                <button class="button" type="submit">筛选</button>
+                <a class="button button-secondary" href="{% url 'patient_list' %}?view={{ view_mode }}">重置</a>
+            </div>
+        </div>
+    </form>
+</section>
+
+{% if view_mode == "card" %}
+    <div class="card-grid">
+        {% for row in page_obj %}
+            {% with patient=row.patient treatment=row.treatment %}
+                <article class="card card-compact">
+                    <div class="card-top">
+                        <div class="card-headings">
+                            <h2>
+                                <a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a>
+                                <span class="patient-id-inline">{{ patient.outpatient_number|default:"-" }}</span>
+                            </h2>
+                            <p>
+                                {{ row.visit_unit|default:"-" }}
+                            </p>
+                        </div>
+                        <span class="status {% if row.status == '已逾期' %}status-red{% elif row.status == '今日回访' %}status-today{% elif row.status == '已完成' %}status-green{% else %}status-amber{% endif %}">
+                            {{ row.status }}
+                        </span>
+                    </div>
+
+                    <div class="card-chip-row">
+                        <span class="card-chip">年龄 {{ patient.current_age|default:"-" }}</span>
+                        <span class="card-chip">民族 {{ patient.ethnicity|default:"-" }}</span>
+                        {% if patient.phone %}
+                            <span class="card-chip">电话 {{ patient.phone }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-summary">
+                        <div class="card-summary-item card-summary-wide">
+                            <span>西医疾病</span>
+                            <strong>{{ row.western_disease|default:"-" }}</strong>
+                        </div>
+                        <div class="card-summary-item">
+                            <span>开始治疗</span>
+                            <strong>{{ row.start_date|default:"-" }}</strong>
+                        </div>
+                        <div class="card-summary-item card-summary-accent">
+                            <span>下次随访</span>
+                            <strong>{{ row.next_followup_date|default:"-" }}</strong>
+                        </div>
+                    </div>
+
+                    {% if treatment %}
+                        <div class="progress-block">
+                            <div class="progress-label">
+                                <span>进度 {{ row.completed_count }}/{{ row.planned_count }}</span>
+                                <span>{{ row.progress_percent }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ row.progress_percent }}%;"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="card-actions">
+                        <a class="button button-secondary" href="{% url 'patient_detail' patient.pk %}">查看详情</a>
+                        {% if row.can_edit %}
+                            <a class="button button-secondary" href="{% url 'patient_update' patient.pk %}">编辑</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endwith %}
+        {% empty %}
+            <article class="empty-state">
+                <h2>没有符合条件的患者</h2>
+                <p>可以调整筛选条件，或者录入新的患者。</p>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <section class="panel">
+        <form method="post" action="{% url 'patient_export' %}">
+            {% csrf_token %}
+            <input type="hidden" name="current_query" value="{{ current_query }}">
+            {% if can_export_data %}
+            <div class="table-actions">
+                <button class="button" type="submit" name="scope" value="selected">导出勾选汇总</button>
+                <button class="button button-secondary" type="submit" name="scope" value="filtered">导出当前筛选</button>
+            </div>
+            {% endif %}
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            {% if can_export_data %}
+                            <th><input type="checkbox" id="select-all"></th>
+                            {% endif %}
+                            <th><a href="?{{ sort_queries.name }}">姓名</a></th>
+                            <th><a href="?{{ sort_queries.age }}">年龄</a></th>
+                            <th><a href="?{{ sort_queries.ethnicity }}">民族</a></th>
+                            <th><a href="?{{ sort_queries.tcm_disease }}">中医疾病</a></th>
+                            <th><a href="?{{ sort_queries.western_disease }}">西医疾病</a></th>
+                            <th><a href="?{{ sort_queries.treatment_count }}">诊疗次数</a></th>
+                            <th><a href="?{{ sort_queries.followup_count }}">随访次数</a></th>
+                            <th><a href="?{{ sort_queries.start_date }}">开始治疗</a></th>
+                            <th><a href="?{{ sort_queries.next_followup_date }}">下次随访</a></th>
+                            <th><a href="?{{ sort_queries.status }}">状态</a></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in page_obj %}
+                            {% with patient=row.patient %}
+                                <tr>
+                                    {% if can_export_data %}
+                                    <td><input type="checkbox" name="selected_ids" value="{{ patient.id }}"></td>
+                                    {% endif %}
+                                    <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+                                    <td>{{ patient.current_age|default:"-" }}</td>
+                                    <td>{{ patient.ethnicity|default:"-" }}</td>
+                                    <td>{{ row.tcm_disease|default:"-" }}</td>
+                                    <td>{{ row.western_disease|default:"-" }}</td>
+                                    <td>{{ row.treatment_count }}</td>
+                                    <td>{{ row.followup_count }}</td>
+                                    <td>{{ row.start_date|default:"-" }}</td>
+                                    <td>{{ row.next_followup_date|default:"-" }}</td>
+                                    <td>
+                                        <span class="status {% if row.status == '已逾期' %}status-red{% elif row.status == '今日回访' %}status-today{% elif row.status == '已完成' %}status-green{% else %}status-amber{% endif %}">
+                                            {{ row.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="{% if can_export_data %}11{% else %}10{% endif %}">没有符合条件的患者。</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        {% if can_export_data %}
+            <form method="post" action="{% url 'patient_export_detail' %}" class="export-detail-form">
+                {% csrf_token %}
+                <input type="hidden" name="current_query" value="{{ current_query }}">
+                <div class="table-actions table-actions-split">
+                    <div class="table-actions">
+                        <button class="button" type="submit" name="scope" value="selected" onclick="return syncSelectedIds(this.form);">导出勾选详情</button>
+                        <button class="button button-secondary" type="submit" name="scope" value="filtered">导出筛选详情</button>
+                    </div>
+                    <div class="pagination pagination-inline">
+                        {% if page_obj.has_previous %}
+                            <a href="?{{ prev_page_query }}">上一页</a>
+                        {% endif %}
+                        <span>第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                        {% if page_obj.has_next %}
+                            <a href="?{{ next_page_query }}">下一页</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="table-actions table-actions-split top-gap">
+                <p class="inline-note">普通账号可查看数据，但不能导出数据。</p>
+                <div class="pagination pagination-inline">
+                    {% if page_obj.has_previous %}
+                        <a href="?{{ prev_page_query }}">上一页</a>
+                    {% endif %}
+                    <span>第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                    {% if page_obj.has_next %}
+                        <a href="?{{ next_page_query }}">下一页</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+
+{% if view_mode == "card" %}
+    <section class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{{ prev_page_query }}">上一页</a>
+        {% endif %}
+        <span>第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+        {% if page_obj.has_next %}
+            <a href="?{{ next_page_query }}">下一页</a>
+        {% endif %}
+    </section>
+{% endif %}
+
+<script>
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            document.querySelectorAll('input[name="selected_ids"]').forEach((item) => {
+                item.checked = selectAll.checked;
+            });
+        });
+    }
+
+    function syncSelectedIds(form) {
+        form.querySelectorAll('input[name="selected_ids"]').forEach((item) => item.remove());
+        document.querySelectorAll('input[name="selected_ids"]:checked').forEach((item) => {
+            const cloned = document.createElement('input');
+            cloned.type = 'hidden';
+            cloned.name = 'selected_ids';
+            cloned.value = item.value;
+            form.appendChild(cloned);
+        });
+        return true;
+    }
+</script>
+{% endblock %}

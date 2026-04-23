@@ -1,0 +1,4 @@
+Django==5.2.12
+requests==2.32.4
+gunicorn>=22,<24
+whitenoise>=6,<7

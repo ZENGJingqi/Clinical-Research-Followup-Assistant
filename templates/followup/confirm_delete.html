@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <div class="section-title">
+        <h1>{{ title }}</h1>
+        <p>{{ description }}</p>
+    </div>
+    <form method="post" class="form-card">
+        {% csrf_token %}
+        <div class="toolbar-actions">
+            <button class="button button-danger" type="submit">确认删除</button>
+            <a class="button button-secondary" href="{{ cancel_url }}">取消</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

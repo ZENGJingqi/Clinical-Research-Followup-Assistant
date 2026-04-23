@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page term-page">
+    <div class="section-title">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <div class="term-layout">
+        <form method="post" class="form-card term-import-card">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="import">
+            <div class="term-card-head">
+                <div class="term-card-title">
+                    <h2>批量导入术语</h2>
+                    <p>支持按分类集中维护术语和别名。</p>
+                </div>
+                <button class="button" type="submit">批量保存</button>
+            </div>
+            <div class="term-tip">
+                输入说明：每行 1 条。可写成“术语名称”或“术语名称|别名1,别名2”。重复导入同一术语时，不会新建，会自动补充别名。
+            </div>
+            {% if form.non_field_errors %}
+                <div class="message">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% for field in form %}
+                <div class="field-box">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="helptext">{{ field.help_text }}</small>
+                    {% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+        </form>
+
+        <form method="post" class="panel term-library-card">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="current_filter_category" value="{{ filter_category }}">
+        <input type="hidden" name="current_keyword" value="{{ keyword }}">
+        <div class="term-card-head">
+            <div class="term-card-title">
+                <h2>已录入术语</h2>
+                <p>按固定分类归档展示，支持检索、全选和批量删除。</p>
+            </div>
+            <div class="toolbar-actions">
+                <button class="button button-secondary" type="button" id="select-visible-terms">全选当前结果</button>
+                <button class="button button-secondary" type="submit">删除所选</button>
+            </div>
+        </div>
+        <div class="term-filter-shell">
+            <div class="term-filter-row">
+                <div class="field-box term-filter-field">
+                    <label for="id_filter_category">术语分类</label>
+                    <select id="id_filter_category" name="filter_category" form="term-filter-form">
+                        <option value="">全部分类</option>
+                        {% for value, label in category_choices %}
+                            <option value="{{ value }}" {% if filter_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field-box term-filter-field">
+                    <label for="id_term_keyword">关键词</label>
+                    <input id="id_term_keyword" type="text" name="keyword" value="{{ keyword }}" form="term-filter-form" placeholder="可检索术语名称或别名">
+                </div>
+                <div class="field-box term-filter-action">
+                    <label>&nbsp;</label>
+                    <button class="button button-secondary" type="submit" form="term-filter-form">检索</button>
+                </div>
+                <div class="field-box term-filter-action">
+                    <label>&nbsp;</label>
+                    <a class="button button-secondary" href="{% url 'term_list' %}">清空检索</a>
+                </div>
+            </div>
+        </div>
+        {% for group in category_groups %}
+            <details class="term-group" {% if filter_category == group.value or keyword %}open{% endif %}>
+                <summary>
+                    <span class="term-group-label">
+                        <strong>{{ group.label }}</strong>
+                    </span>
+                    <span class="term-group-count">{{ group.count }} 条</span>
+                </summary>
+                <div class="table-wrap">
+                    <table class="table term-table">
+                        <thead>
+                            <tr>
+                                <th class="term-check-col">选择</th>
+                                <th>术语名称</th>
+                                <th>别名</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in group.items %}
+                                <tr>
+                                    <td class="term-check-col"><input type="checkbox" name="selected_term_ids" value="{{ item.pk }}"></td>
+                                    <td><span class="term-name">{{ item.name }}</span></td>
+                                    <td><span class="term-alias">{{ item.alias|default:"-" }}</span></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="term-empty-cell">当前条件下暂无术语。</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        {% endfor %}
+        </form>
+    </div>
+    <form id="term-filter-form" method="get"></form>
+</section>
+<script>
+    (function () {
+        const selectButton = document.getElementById('select-visible-terms');
+        if (!selectButton) {
+            return;
+        }
+        selectButton.addEventListener('click', function () {
+            document.querySelectorAll('details[open] input[name="selected_term_ids"]').forEach(function (checkbox) {
+                checkbox.checked = true;
+            });
+        });
+    }());
+</script>
+{% endblock %}

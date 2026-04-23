@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page project-form-page">
+    <div class="section-title project-form-title">
+        <h1>{{ page_title }}</h1>
+        <p>维护课题基础信息，后续在项目详情中纳入患者。</p>
+    </div>
+
+    <form method="post" class="form-card compact-form project-form-card">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="message">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="field-box">
+            <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+        </div>
+
+        <div class="form-grid form-grid-three">
+            <div class="field-box">
+                <label for="{{ form.principal_investigator.id_for_label }}">{{ form.principal_investigator.label }}</label>
+                {{ form.principal_investigator }}
+                {{ form.principal_investigator.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                {{ form.status }}
+                {{ form.status.errors }}
+            </div>
+            <div class="field-box">
+                <label for="{{ form.target_enrollment.id_for_label }}">{{ form.target_enrollment.label }}</label>
+                {{ form.target_enrollment }}
+                {{ form.target_enrollment.errors }}
+            </div>
+        </div>
+
+        <div class="field-box">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {{ form.notes.errors }}
+        </div>
+
+        <div class="toolbar-actions project-form-actions">
+            <button class="button" type="submit">{{ submit_label }}</button>
+            <a class="button button-secondary" href="{{ cancel_url }}">返回</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

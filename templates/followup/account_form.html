@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <div class="section-title">
+        <h1>{{ page_title }}</h1>
+        <p>按账号配置角色、项目权限和历史数据修改天数。</p>
+    </div>
+
+    <form method="post" class="form-card compact-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="message">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {{ form.as_p }}
+        <p class="helptext">建议值：管理员 365 天，普通账号 3 天。管理员和普通账号都需按需分配项目权限。</p>
+        <div class="toolbar-actions">
+            <button class="button" type="submit">{{ submit_label }}</button>
+            <a class="button button-secondary" href="{{ cancel_url }}">返回账号列表</a>
+        </div>
+    </form>
+</section>
+
+<script>
+    (function () {
+        const roleField = document.getElementById('id_role');
+        const daysField = document.getElementById('id_modify_window_days');
+        const projectField = document.getElementById('id_project_permissions');
+        const projectFieldWrapper = projectField ? projectField.closest('p') : null;
+        if (!roleField || !daysField) {
+            return;
+        }
+
+        const defaults = {
+            admin: '365',
+            normal: '3',
+        };
+
+        function toggleProjectField() {
+            if (!projectFieldWrapper || !projectField) {
+                return;
+            }
+            const visible = roleField.value === 'admin' || roleField.value === 'normal';
+            projectFieldWrapper.style.display = visible ? '' : 'none';
+            projectField.disabled = !visible;
+        }
+
+        roleField.addEventListener('change', () => {
+            if (!daysField.value || Object.values(defaults).includes(daysField.value)) {
+                daysField.value = defaults[roleField.value] || daysField.value;
+            }
+            toggleProjectField();
+        });
+        toggleProjectField();
+    }());
+</script>
+{% endblock %}

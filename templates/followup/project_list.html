@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}项目管理{% endblock %}
+
+{% block content %}
+<section class="page-head project-page-head">
+    <div class="project-title-wrap">
+        <h1>项目管理</h1>
+    </div>
+    {% if can_manage_project_definition %}
+        <a class="button" href="{% url 'project_create' %}">新建项目</a>
+    {% endif %}
+</section>
+
+<section class="panel project-table-panel">
+    <div class="table-wrap">
+        <table class="table project-table">
+            <thead>
+                <tr>
+                    <th>项目名称</th>
+                    <th>负责人</th>
+                    <th>状态</th>
+                    <th>目标例数</th>
+                    <th>已纳入</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                    <tr>
+                        <td>
+                            <a class="project-name-link" href="{% url 'project_detail' project.pk %}">{{ project.name }}</a>
+                        </td>
+                        <td>{{ project.principal_investigator|default:"-" }}</td>
+                        <td>
+                            <span class="project-status-chip project-status-{{ project.status }}">{{ project.get_status_display }}</span>
+                        </td>
+                        <td>{{ project.target_enrollment }}</td>
+                        <td>
+                            <strong>{{ project.enrollment_count_value }}</strong>
+                        </td>
+                        <td>
+                            <div class="project-row-actions">
+                                <a class="button button-secondary button-small" href="{% url 'project_detail' project.pk %}">查看</a>
+                                {% if can_manage_project_definition %}
+                                    <a class="button button-secondary button-small" href="{% url 'project_update' project.pk %}">编辑</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="project-empty-cell">暂无项目，请先创建项目。</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel top-gap project-detail-panel">
+    <div class="list-head project-block-head">
+        <h2>新增入组</h2>
+        <div class="project-head-actions">
+            <button class="button button-secondary" type="submit" form="project-filter-form">筛选</button>
+            <a class="button button-secondary" href="{% url 'project_list' %}{% if enrollment_project_id %}?project_id={{ enrollment_project_id }}{% endif %}">重置</a>
+        </div>
+    </div>
+    <form method="get" class="filter-form top-gap" id="project-filter-form">
+        <div class="filter-grid project-filter-grid">
+            <div>
+                <label for="project-enroll-q">关键词</label>
+                <input id="project-enroll-q" type="text" name="enroll_q" value="{{ enrollment_keyword }}" placeholder="门诊号/姓名/电话">
+            </div>
+            <div>
+                <label for="project-enroll-tcm">中医疾病</label>
+                <input id="project-enroll-tcm" type="text" name="enroll_tcm_disease" value="{{ enrollment_tcm_disease }}" placeholder="中医疾病">
+            </div>
+            <div>
+                <label for="project-enroll-status">状态</label>
+                <select id="project-enroll-status" name="enroll_status">
+                    <option value="">全部</option>
+                    <option value="enrolled" {% if enrollment_status == "enrolled" %}selected{% endif %}>已纳入</option>
+                    <option value="not_enrolled" {% if enrollment_status == "not_enrolled" %}selected{% endif %}>未纳入</option>
+                </select>
+            </div>
+            <div>
+                <label for="project-enroll-start-from">开始时间从</label>
+                <input id="project-enroll-start-from" type="text" class="js-date-input" data-date-input="true" data-flatpickr="date" name="enroll_start_date_from" value="{{ enrollment_start_date_from }}" placeholder="YYYY-MM-DD" autocomplete="off">
+            </div>
+            <div>
+                <label for="project-enroll-start-to">开始时间到</label>
+                <input id="project-enroll-start-to" type="text" class="js-date-input" data-date-input="true" data-flatpickr="date" name="enroll_start_date_to" value="{{ enrollment_start_date_to }}" placeholder="YYYY-MM-DD" autocomplete="off">
+            </div>
+        </div>
+        <input type="hidden" name="project_id" value="{{ enrollment_project_id }}">
+    </form>
+
+    <form method="post" class="top-gap project-enrollment-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_patients">
+        <input type="hidden" name="enroll_q" value="{{ enrollment_keyword }}">
+        <input type="hidden" name="enroll_tcm_disease" value="{{ enrollment_tcm_disease }}">
+        <input type="hidden" name="enroll_status" value="{{ enrollment_status }}">
+        <input type="hidden" name="enroll_start_date_from" value="{{ enrollment_start_date_from }}">
+        <input type="hidden" name="enroll_start_date_to" value="{{ enrollment_start_date_to }}">
+        <div class="filter-grid project-meta-grid">
+            <div class="project-meta-project">
+                <select id="project-enroll-id" name="project_id" required>
+                    <option value="">请选择项目</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}" {% if enrollment_project_id == project.id|stringformat:'s' %}selected{% endif %}>{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="project-meta-inline">
+                <label for="{{ enrollment_form.group_name.id_for_label }}">{{ enrollment_form.group_name.label }}</label>
+                <div>
+                    {{ enrollment_form.group_name }}
+                    {{ enrollment_form.group_name.errors }}
+                </div>
+            </div>
+            <div class="project-meta-inline">
+                <label for="{{ enrollment_form.enrollment_date.id_for_label }}">{{ enrollment_form.enrollment_date.label }}</label>
+                <div>
+                    {{ enrollment_form.enrollment_date }}
+                    {{ enrollment_form.enrollment_date.errors }}
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar-actions top-gap project-submit-wrap">
+            <button class="button" type="submit">纳入所选患者</button>
+        </div>
+
+        <div class="project-select-grid top-gap">
+            <div class="table-wrap">
+                <table class="table project-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-patients">
+                            </th>
+                            <th><a href="?{{ enroll_sort_queries.patient_id }}">门诊号</a></th>
+                            <th><a href="?{{ enroll_sort_queries.name }}">姓名</a></th>
+                            <th><a href="?{{ enroll_sort_queries.age }}">年龄</a></th>
+                            <th><a href="?{{ enroll_sort_queries.ethnicity }}">民族</a></th>
+                            <th><a href="?{{ enroll_sort_queries.tcm_disease }}">中医疾病</a></th>
+                            <th><a href="?{{ enroll_sort_queries.western_disease }}">西医疾病</a></th>
+                            <th><a href="?{{ enroll_sort_queries.visit_unit }}">就诊单位</a></th>
+                            <th><a href="?{{ enroll_sort_queries.project }}">项目</a></th>
+                            <th><a href="?{{ enroll_sort_queries.group }}">分组</a></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in enrollment_page_obj %}
+                            <tr>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        name="selected_patient_ids"
+                                        value="{{ row.patient.id }}"
+                                        data-patient-label="{{ row.patient.outpatient_number|default:'-' }} {{ row.patient.name }}"
+                                    >
+                                </td>
+                                <td>{{ row.patient.outpatient_number|default:"-" }}</td>
+                                <td><a class="project-name-link" href="{% url 'patient_detail' row.patient.pk %}">{{ row.patient.name }}</a></td>
+                                <td>{{ row.patient.current_age|default:"-" }}</td>
+                                <td>{{ row.patient.ethnicity|default:"-" }}</td>
+                                <td>{{ row.tcm_disease|default:"-" }}</td>
+                                <td>{{ row.western_disease|default:"-" }}</td>
+                                <td>{{ row.visit_unit|default:"-" }}</td>
+                                <td>
+                                    {% if row.project_tags_display %}
+                                        <div class="project-lines">
+                                            {% for tag in row.project_tags_display %}
+                                                <div class="project-line-item">
+                                                    <span class="patient-project-tag patient-project-status-{{ tag.project_status }}">{{ tag.project_name }}</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.project_tags_display %}
+                                        <div class="project-lines">
+                                            {% for tag in row.project_tags_display %}
+                                                <div class="project-line-item">{{ tag.group_name|default:"-" }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="10" class="project-empty-cell">暂无可纳入的患者。</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="toolbar-actions top-gap project-submit-wrap">
+            {% if enrollment_page_obj.paginator.num_pages > 1 %}
+                <div class="pagination pagination-inline">
+                    {% if enrollment_page_obj.has_previous %}
+                        <a href="?{{ enroll_prev_query }}">上一页</a>
+                    {% endif %}
+                    <span>第 {{ enrollment_page_obj.number }} / {{ enrollment_page_obj.paginator.num_pages }} 页</span>
+                    {% if enrollment_page_obj.has_next %}
+                        <a href="?{{ enroll_next_query }}">下一页</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectAll = document.getElementById("select-all-patients");
+        const patientCheckboxes = Array.from(document.querySelectorAll('input[name="selected_patient_ids"]'));
+
+        if (!selectAll) {
+            return;
+        }
+        selectAll.addEventListener("change", function () {
+            const checked = selectAll.checked;
+            patientCheckboxes.forEach(function (node) {
+                node.checked = checked;
+            });
+        });
+        patientCheckboxes.forEach((node) => {
+            node.addEventListener("change", function () {
+                if (!node.checked) {
+                    selectAll.checked = false;
+                } else if (patientCheckboxes.length && patientCheckboxes.every((item) => item.checked)) {
+                    selectAll.checked = true;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
