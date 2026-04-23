@@ -10,7 +10,7 @@ if %errorlevel%==0 (
   if %errorlevel%==0 (
     python one_click_setup.py --mode local
   ) else (
-    echo 未检测到 Python，请先安装 Python 3.11+ 并勾选 Add Python to PATH。
+    echo Python was not found. Please install Python 3.11+ and add it to PATH.
     exit /b 1
   )
 )

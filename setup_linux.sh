@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "未检测到 python3，请先安装 Python 3.11+。"
+  echo "python3 was not found. Please install Python 3.11+ first."
   exit 1
 fi
 

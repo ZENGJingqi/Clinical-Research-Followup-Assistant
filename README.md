@@ -46,6 +46,8 @@ The system can be deployed in different ways:
 
 ## Quick Start
 
+The setup scripts create a virtual environment, install dependencies, generate `.env.local`, apply migrations, and prompt for the `root` account on first-time setup.
+
 1. Unzip the installation package.
 2. Install Python `3.11` or above and make sure it is added to your system `PATH`.
 3. Open the project folder.
@@ -102,6 +104,7 @@ If you use public deployment, make sure port `8000` is allowed by the firewall o
 Important notes:
 
 - No default password is included
+- If the `root` account already exists, setup keeps it and skips account creation
 - Old account data is not migrated automatically
 - If you replace an older version, remove the old folder before unpacking the new package
 
