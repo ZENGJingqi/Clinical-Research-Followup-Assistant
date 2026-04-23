@@ -2,6 +2,11 @@
 
 Clinical Research Followup Assistant is a Django-based web application for managing patient follow-up workflows in clinical research. It supports structured longitudinal records across patient profiles, treatment history, follow-up visits, research projects, scales, attachments, data export, and optional AI-assisted summaries.
 
+## Latest Release
+
+- Release page: [Clinical Research Followup Assistant V1.0 (2026-04-23)](https://github.com/ZENGJingqi/Clinical-Research-Followup-Assistant/releases/tag/v1.0-20260423)
+- Download package: `Clinical-Research-Followup-Assistant-User-Package-20260423.zip`
+
 ## Overview
 
 This repository contains the user installation edition of the system. It is designed for clinical research teams that need a practical, deployment-ready tool for organizing follow-up data and keeping research records consistent over time.
@@ -148,3 +153,14 @@ It intentionally excludes local research documents, copyright-submission materia
 
 - For public deployment, expose port `8000` only behind proper firewall and access controls.
 - Enable AI services only if their use is compatible with your institution's data governance requirements.
+
+## Validation Status
+
+The current user package and repository state were verified on April 23, 2026 with the following checks:
+
+- Dependency installation with `pip install -r requirements.txt`
+- Django system check with `python manage.py check`
+- Test run with `python manage.py test`
+- Migration consistency check with `python manage.py makemigrations --check --dry-run`
+- Windows setup script execution with `setup_windows.bat`
+- Local startup smoke test with HTTP `200` on `/login/`
