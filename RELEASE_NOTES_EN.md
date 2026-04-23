@@ -3,7 +3,8 @@
 ## Clinical Research Followup Assistant V1.0
 
 User Installation Package  
-Date: 2026-04-22
+Date: 2026-04-23
+Release asset: `Clinical-Research-Followup-Assistant-User-Package-20260423.zip`
 
 This release provides a user-ready deployment package for the Clinical Research Followup Assistant.
 
@@ -14,6 +15,7 @@ This release provides a user-ready deployment package for the Clinical Research 
 - Local deployment mode
 - LAN or public deployment mode
 - Optional AI configuration for assisted patient summaries
+- Updated setup messages and validated installation flow
 
 ### Main functions
 
