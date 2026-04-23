@@ -5,7 +5,7 @@ Clinical Research Followup Assistant is a Django-based web application for manag
 ## Latest Release
 
 - Release page: [Clinical Research Followup Assistant V1.0 (2026-04-23)](https://github.com/ZENGJingqi/Clinical-Research-Followup-Assistant/releases/tag/v1.0-20260423)
-- Download package: `Clinical-Research-Followup-Assistant-User-Package-20260423.zip`
+- Download package: `临床科研智能随访助手_用户安装版_20260423.zip`
 
 ## Overview
 

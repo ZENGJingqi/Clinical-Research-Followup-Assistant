@@ -4,7 +4,7 @@
 
 User Installation Package  
 Date: 2026-04-23
-Release asset: `Clinical-Research-Followup-Assistant-User-Package-20260423.zip`
+Release asset: `临床科研智能随访助手_用户安装版_20260423.zip`
 
 This release provides a user-ready deployment package for the Clinical Research Followup Assistant.
 
