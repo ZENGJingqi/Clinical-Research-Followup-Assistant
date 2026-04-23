@@ -1,24 +1,20 @@
 # Clinical Research Followup Assistant
 
-Clinical Research Followup Assistant is a web-based application for managing patient follow-up work in clinical research. It supports structured longitudinal tracking for patient records, treatment history, follow-up visits, research projects, scales, attachments, data export, and AI-assisted summaries.
-
-Repository:
-
-[https://github.com/ZENGJingqi/Clinical-Research-Followup-Assistant](https://github.com/ZENGJingqi/Clinical-Research-Followup-Assistant)
+Clinical Research Followup Assistant is a Django-based web application for managing patient follow-up workflows in clinical research. It supports structured longitudinal records across patient profiles, treatment history, follow-up visits, research projects, scales, attachments, data export, and optional AI-assisted summaries.
 
 ## Overview
 
-This project helps clinical research teams keep follow-up data clear, structured, and easy to manage in one system. It supports both daily follow-up work and research-oriented data collection.
+This repository contains the user installation edition of the system. It is designed for clinical research teams that need a practical, deployment-ready tool for organizing follow-up data and keeping research records consistent over time.
 
 Main use cases:
 
 - Manage patient profiles and treatment records
 - Plan and record follow-up visits
 - Track research project enrollment and status
-- Maintain scale templates and follow-up scale records
+- Maintain scale templates and structured assessment records
 - Store clinical terms, prescription templates, and attachments
-- Export data for research analysis
-- Generate AI-assisted patient follow-up summaries
+- Export structured data for analysis and reporting
+- Generate AI-assisted follow-up summaries when enabled
 
 ## Key Features
 
@@ -28,9 +24,9 @@ Main use cases:
 - Research project management and project-based patient enrollment
 - Scale and questionnaire template management
 - Attachment upload and organized export
-- Role-based access control with `root`, `admin`, and `normal` users
+- Role-based access control with `root`, `admin`, and `normal` roles
 - Export permissions and record modification time-window control
-- Optional AI integration for structured patient summary assistance
+- Optional AI integration for patient summary assistance
 
 ## Technology Stack
 
@@ -40,7 +36,7 @@ Main use cases:
 - Deployment: Windows or Linux
 - Python version: 3.11+ recommended, 3.12 preferred
 
-## Deployment Modes
+## Deployment Options
 
 The system can be deployed in different ways:
 
@@ -135,14 +131,17 @@ AI_BASE_URL=https://open.bigmodel.cn/api/paas/v4/chat/completions
 
 Restart the service after updating the configuration.
 
-## Included Runtime Files
+## Package Scope
 
-This user installation package keeps only the files needed for running the system:
+This repository includes the runtime application code, templates, static assets, setup scripts, and base configuration needed to run the system:
 
 - Application code: `config/`, `followup/`, `templates/`, `static/`
 - Setup and startup scripts for Windows and Linux
 - Basic configuration files such as `.env.example` and `requirements.txt`
 
-## Keywords
+It intentionally excludes local research documents, copyright-submission materials, and packaged release archives.
 
-clinical research, followup, patient management, treatment tracking, research enrollment, longitudinal data, medical data export, Django, SQLite, AI-assisted summary
+## Deployment Notes
+
+- For public deployment, expose port `8000` only behind proper firewall and access controls.
+- Enable AI services only if their use is compatible with your institution's data governance requirements.
